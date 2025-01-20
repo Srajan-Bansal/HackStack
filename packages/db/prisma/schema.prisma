@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String       @id @default(uuid())
+  username   String?
+  email      String       @unique
+  password   String
+  Submission Submission[]
+  createdAt  DateTime     @default(now())
+}
+
+model Problem {
+  id          Int           @id @default(autoincrement())
+  title       String
+  slug        String
+  statement   String
+  difficulty  Difficulty
+  type        ProblemType[]
+  testCases   TestCase[]
+  Submission  Submission[]
+  DefaultCode DefaultCode[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model DefaultCode {
+  id         String   @id @default(uuid())
+  code       String
+  Language   Language @relation(fields: [languageId], references: [id])
+  languageId Int
+  Problem    Problem  @relation(fields: [problemId], references: [id])
+  problemId  Int
+}
+
+model TestCase {
+  id           String         @id @default(uuid())
+  status       TestCaseStatus @default(PENDING)
+  Problem      Problem?       @relation(fields: [problemId], references: [id])
+  problemId    Int?
+  Submission   Submission     @relation(fields: [submissionId], references: [id])
+  submissionId String
+  time         Int
+  Memory       Int
+}
+
+model Submission {
+  id         String          @id @default(uuid())
+  code       String
+  status     SubmissonStatus @default(PENDING)
+  User       User            @relation(fields: [userId], references: [id])
+  userId     String
+  Language   Language        @relation(fields: [languageId], references: [id])
+  languageId Int
+  Problem    Problem?        @relation(fields: [problemId], references: [id])
+  problemId  Int?
+  TestCases  TestCase[]
+  createdAt  DateTime        @default(now())
+}
+
+model Language {
+  id          Int           @id @default(autoincrement())
+  name        String
+  judgeOId    Int
+  DefaultCode DefaultCode[]
+  Submission  Submission[]
+}
+
+enum TestCaseStatus {
+  SUCCESS
+  PENDING
+  FAILED
+}
+
+enum SubmissonStatus {
+  ACCEPTED
+  PENDING
+  REJECTED
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ProblemType {
+  Array
+  String
+  HashTable
+  LinkedList
+}
