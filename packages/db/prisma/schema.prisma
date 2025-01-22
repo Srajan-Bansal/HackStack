@@ -15,9 +15,11 @@ datasource db {
 
 model User {
   id         String       @id @default(uuid())
-  username   String?
   email      String       @unique
+  name       String?
+  token      String?
   password   String
+  role       UserRole     @default(USER)
   Submission Submission[]
   createdAt  DateTime     @default(now())
 }
@@ -25,7 +27,7 @@ model User {
 model Problem {
   id          Int           @id @default(autoincrement())
   title       String
-  slug        String
+  slug        String        @unique
   statement   String
   difficulty  Difficulty
   type        ProblemType[]
@@ -34,6 +36,8 @@ model Problem {
   DefaultCode DefaultCode[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+
+  @@index([slug])
 }
 
 model DefaultCode {
@@ -52,14 +56,14 @@ model TestCase {
   problemId    Int?
   Submission   Submission     @relation(fields: [submissionId], references: [id])
   submissionId String
-  time         Int
-  Memory       Int
 }
 
 model Submission {
   id         String          @id @default(uuid())
   code       String
   status     SubmissonStatus @default(PENDING)
+  Runtime    Int
+  Memory     Int
   User       User            @relation(fields: [userId], references: [id])
   userId     String
   Language   Language        @relation(fields: [languageId], references: [id])
@@ -101,4 +105,9 @@ enum ProblemType {
   String
   HashTable
   LinkedList
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
