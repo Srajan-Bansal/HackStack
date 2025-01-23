@@ -1,12 +1,24 @@
-import { Code } from '@repo/ui/Code';
+import { Theme } from '@radix-ui/themes';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import Problem from './pages/Problem';
 
 const App = () => {
 	return (
-		<div>
-			<h1 className='bg-red-400'>App</h1>
-			<p>Open the console to see the logs</p>
-			<Code />
-		</div>
+		<Theme>
+			<BrowserRouter>
+				<Routes>
+					<Route
+						path='/'
+						element={<Index />}
+					/>
+					<Route
+						path='/problem/:id'
+						element={<Problem />}
+					/>
+				</Routes>
+			</BrowserRouter>
+		</Theme>
 	);
 };
 
