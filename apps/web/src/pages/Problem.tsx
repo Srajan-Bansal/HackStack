@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import Header from './../components/Header';
 import DifficultyBadge from './../components/DifficultyBadge';
+import { CodeEditor } from '../components/@monaco-editor/CodeEditor';
 
 const problems = {
 	'1': {
@@ -31,7 +32,7 @@ const Problem = () => {
 	return (
 		<div className='min-h-screen bg-background'>
 			<Header />
-			<main className='container py-8'>
+			<main className='container py-8 flex gap-8'>
 				<div className='mb-8'>
 					<div className='mb-4 flex items-center gap-4'>
 						<h1 className='text-3xl font-bold'>{problem.title}</h1>
@@ -63,14 +64,8 @@ const Problem = () => {
 						))}
 					</div>
 				</div>
-				<div className='rounded-lg border border-border bg-card p-4'>
-					<pre className='font-code'>
-						<code>{`function solution(nums: number[], target: number): number[] {
-    // Write your code here
-    return [];
-}`}</code>
-					</pre>
-				</div>
+
+				<CodeEditor />
 			</main>
 		</div>
 	);
