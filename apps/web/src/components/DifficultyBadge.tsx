@@ -8,21 +8,20 @@ interface DifficultyBadgeProps {
 
 const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
 	return (
-		<span
-			className={
-				'rounded px-2 py-1 text-xs font-medium capitalize text-white'
-			}
-		>
+		<span>
 			<Badge
+				className='capitalize'
 				color={
-					difficulty == 'easy'
+					difficulty === 'easy'
 						? 'green'
-						: difficulty == 'medium'
+						: difficulty === 'medium'
 							? 'yellow'
-							: 'red'
+							: difficulty === 'hard'
+								? 'red'
+								: 'cyan'
 				}
 			>
-				In progress
+				{difficulty}
 			</Badge>
 		</span>
 	);

@@ -1,34 +1,30 @@
+import { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import ProblemCard from './../components/ProblemCard';
+import axios from 'axios';
+import { ProblemType } from '@repo/common-zod/types';
 
-const problems = [
-	{
-		id: 1,
-		title: 'Two Sum',
-		difficulty: 'easy',
-		acceptanceRate: 48.5,
-	},
-	{
-		id: 2,
-		title: 'Add Two Numbers',
-		difficulty: 'medium',
-		acceptanceRate: 39.2,
-	},
-	{
-		id: 3,
-		title: 'Longest Substring Without Repeating Characters',
-		difficulty: 'medium',
-		acceptanceRate: 33.8,
-	},
-	{
-		id: 4,
-		title: 'Median of Two Sorted Arrays',
-		difficulty: 'hard',
-		acceptanceRate: 35.1,
-	},
-] as const;
+const BACKEND_URL = import.meta.env.BACKEND_URL || 'http://localhost:3000';
 
 const Index = () => {
+	const [problems, setProblems] = useState<ProblemType[]>();
+
+	useEffect(() => {
+		async function fetchProblems() {
+			const response = await axios.get(
+				`${BACKEND_URL}/api/v1/problemset`
+			);
+			console.log(response);
+			setProblems(response.data);
+		}
+
+		fetchProblems();
+	}, []);
+
+	if (!problems) {
+		return <div>Loading...</div>;
+	}
+
 	return (
 		<div className='min-h-screen bg-background'>
 			<Header />
@@ -38,7 +34,9 @@ const Index = () => {
 					{problems.map((problem) => (
 						<ProblemCard
 							key={problem.id}
-							{...problem}
+							id={problem.id}
+							title={problem.title}
+							difficulty={problem.difficulty}
 						/>
 					))}
 				</div>

@@ -1,18 +1,16 @@
 import { Link } from 'react-router-dom';
 import DifficultyBadge from './DifficultyBadge';
+import { ProblemType } from '@repo/common-zod/types';
 
-interface ProblemCardProps {
-	id: number;
-	title: string;
-	difficulty: 'easy' | 'medium' | 'hard';
-	acceptanceRate: number;
-}
+type ProblemCardProps = Pick<ProblemType, 'id' | 'title' | 'difficulty'> & {
+	acceptanceRate?: number;
+};
 
 const ProblemCard = ({
 	id,
 	title,
 	difficulty,
-	acceptanceRate,
+	acceptanceRate = 0,
 }: ProblemCardProps) => {
 	return (
 		<Link
@@ -24,7 +22,11 @@ const ProblemCard = ({
 				<span className='font-medium'>{title}</span>
 			</div>
 			<div className='flex items-center gap-4'>
-				<DifficultyBadge difficulty={difficulty} />
+				<DifficultyBadge
+					difficulty={
+						difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'
+					}
+				/>
 				<span className='text-sm text-muted-foreground'>
 					{acceptanceRate.toFixed(1)}%
 				</span>
