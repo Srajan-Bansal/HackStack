@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import { errorMiddleware } from './middleware/errorMiddleware';
 import authRouter from './routes/auth.route';
 import problemRouter from './routes/problem.route';
+import submissionRouter from './routes/submission.route';
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.get('/', (req, res) => {
 
 app.use('/api/v1', authRouter);
 app.use('/api/v1', problemRouter);
+app.use('/api/v1', submissionRouter);
 
 app.listen(3000, () => {
 	console.log('Server is running on port 3000');
