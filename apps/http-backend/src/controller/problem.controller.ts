@@ -13,6 +13,7 @@ export const getProblems = async (req: Request, res: Response) => {
 			id: true,
 			title: true,
 			difficulty: true,
+			slug: true,
 		},
 	});
 
@@ -24,7 +25,7 @@ export const getProblems = async (req: Request, res: Response) => {
 };
 
 export const getProblem = async (req: Request, res: Response) => {
-	const problemSlug = req.params.slug as string;
+	const problemSlug = req.params.problemSlug as string;
 
 	if (!problemSlug) {
 		return handleError(res, 400, 'Invalid problem slug');

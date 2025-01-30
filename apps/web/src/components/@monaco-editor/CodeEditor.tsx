@@ -1,10 +1,12 @@
-import { useState } from 'react';
 import Editor from '@monaco-editor/react';
-import { languageMapping } from '@repo/language/LanguageMapping';
 
-export const CodeEditor = () => {
-	const [value, setValue] = useState<string>('// some comment');
-
+export const CodeEditor = ({
+	value,
+	setValue,
+}: {
+	value: string;
+	setValue: React.Dispatch<React.SetStateAction<string>>;
+}) => {
 	return (
 		<Editor
 			height={'60vh'}
@@ -15,7 +17,8 @@ export const CodeEditor = () => {
 				scrollBeyondLastLine: false,
 			}}
 			defaultLanguage='javascript'
-			defaultValue='// some comment'
+			defaultValue={value}
+			onChange={(value) => setValue(value || '')}
 		/>
 	);
 };

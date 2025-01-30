@@ -3,6 +3,7 @@
 	"version": "0.0.0",
 	"private": true,
 	"exports": {
+    "./problems": "./src/problems.tsx",
 		"./Code": "./src/Code.tsx",
 		"./styles.css": "./src/styles.css"
 	},

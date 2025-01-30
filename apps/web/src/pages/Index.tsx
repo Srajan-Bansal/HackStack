@@ -1,24 +1,17 @@
 import { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import ProblemCard from './../components/ProblemCard';
-import axios from 'axios';
-import { ProblemType } from '@repo/common-zod/types';
+import { ProblemSchema } from '@repo/common-zod/types';
+import { getProblems } from '../lib/api';
+import { z } from 'zod';
 
-const BACKEND_URL = import.meta.env.BACKEND_URL || 'http://localhost:3000';
+type ProblemType = z.infer<typeof ProblemSchema>;
 
 const Index = () => {
 	const [problems, setProblems] = useState<ProblemType[]>();
 
 	useEffect(() => {
-		async function fetchProblems() {
-			const response = await axios.get(
-				`${BACKEND_URL}/api/v1/problemset`
-			);
-			console.log(response);
-			setProblems(response.data);
-		}
-
-		fetchProblems();
+		getProblems().then(setProblems);
 	}, []);
 
 	if (!problems) {
@@ -36,6 +29,7 @@ const Index = () => {
 							key={problem.id}
 							id={problem.id}
 							title={problem.title}
+							slug={problem.slug}
 							difficulty={problem.difficulty}
 						/>
 					))}

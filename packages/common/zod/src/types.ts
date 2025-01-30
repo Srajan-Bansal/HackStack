@@ -13,7 +13,6 @@ export const UserLoginSchema = z.object({
 export const SubmissionInputSchema = z.object({
 	code: z.string(),
 	languageId: z.number(),
-	problemId: z.number(),
 });
 
 const DifficultySchema = z.enum(['easy', 'medium', 'hard']);
@@ -33,5 +32,3 @@ export const ProblemSchema = z.object({
 	difficulty: DifficultySchema,
 	type: ProblemTypeSchema,
 });
-
-export type ProblemType = z.infer<typeof ProblemSchema>;

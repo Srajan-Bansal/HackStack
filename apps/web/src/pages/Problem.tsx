@@ -4,31 +4,75 @@ import DifficultyBadge from './../components/DifficultyBadge';
 import { CodeEditor } from '../components/@monaco-editor/CodeEditor';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { useEffect, useState } from 'react';
+import { getProblem, submitSolution, checkSubmission } from '../lib/api';
+import { ProblemSchema } from '@repo/common-zod/types';
+import { z } from 'zod';
+import SubmitButton from '../components/SubmitButton';
 
-const problems = {
-	'1': {
-		title: 'Two Sum',
-		difficulty: 'easy' as const,
-		description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+type ProblemType = z.infer<typeof ProblemSchema>;
+
+const markdown = `
+# Two Sum
+
+Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
 You may assume that each input would have exactly one solution, and you may not use the same element twice.
-You can return the answer in any order.`,
-		examples: [
-			{
-				input: 'nums = [2,7,11,15], target = 9',
-				output: '[0,1]',
-				explanation:
-					'Because nums[0] + nums[1] == 9, we return [0, 1].',
-			},
-		],
-	},
-};
+You can return the answer in any order.
 
-const markdown =
-	'# Two Sum\n \n Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n You may assume that each input would have exactly one solution, and you may not use the same element twice.\n You can return the answer in any order.\n \n ## Example\n \n ```\n Input: nums = [2,7,11,15], target = 9\n Output: [0,1]\n Explaination: Because nums[0] + nums[1] == 9, we return [0, 1].\n ```\n \n ```\n Input: nums = [3, 2, 4], target = 6\n Output: [1, 2]\n Explaination: Because nums[1] + nums[2] == 6, we return [1, 2].\n ```\n \n ## Constraints\n \n - 1 <= nums.length <= 10^5\n - -10^9 <= nums[i] <= 10^9\n - -10^9 <= target <= 10^9\n - nums contains each integer at least once';
+## Example
+
+\`\`\`
+Input: nums = [2,7,11,15], target = 9
+Output: [0,1]
+Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
+\`\`\`
+
+\`\`\`
+Input: nums = [3, 2, 4], target = 6
+Output: [1, 2]
+Explanation: Because nums[1] + nums[2] == 6, we return [1, 2].
+\`\`\`
+
+## Constraints
+
+- 1 <= nums.length <= 10^5
+- -10^9 <= nums[i] <= 10^9
+- -10^9 <= target <= 10^9
+- nums contains each integer at least once
+`;
 
 const Problem = () => {
-	const { id } = useParams();
-	const problem = problems[id as keyof typeof problems];
+	const { slug } = useParams<{ slug: string }>();
+	const [problem, setProblem] = useState<ProblemType | null>(null);
+	const [code, setCode] = useState<string>('');
+	const [tokens, setTokens] = useState<string[]>([]);
+
+	useEffect(() => {
+		if (slug) {
+			console.log(slug);
+			getProblem(slug).then((data) => {
+				setProblem(data);
+			});
+		}
+	}, [slug]);
+
+	const languageId = 63;
+	async function handleSubmit() {
+		if (slug && code && languageId) {
+			const response = await submitSolution(slug, code, languageId);
+			console.log(response);
+			setTokens(response);
+		}
+	}
+
+	async function handleCheckResult() {
+		if (slug && tokens) {
+			const response = await checkSubmission(tokens);
+			console.log(response);
+		} else {
+			console.log('No tokens');
+		}
+	}
 
 	if (!problem) {
 		return <div>Problem not found</div>;
@@ -39,13 +83,28 @@ const Problem = () => {
 			<Header />
 			<div className='flex mx-6'>
 				<div className='container py-8 flex gap-8 flex-col w-1/2'>
-					<DifficultyBadge difficulty={'hard'} />
+					<DifficultyBadge difficulty={problem.difficulty} />
 					<Markdown rehypePlugins={[remarkGfm]}>
 						{markdown || 'No description available.'}
 					</Markdown>
 				</div>
 				<div className='w-1/2 py-8'>
-					<CodeEditor />
+					<CodeEditor
+						value={code}
+						setValue={setCode}
+					/>
+
+					<SubmitButton
+						color={'green'}
+						children={'Submit'}
+						onClick={handleSubmit}
+					/>
+
+					<SubmitButton
+						color={'green'}
+						children={'CheckResult'}
+						onClick={handleCheckResult}
+					/>
 				</div>
 			</div>
 		</div>

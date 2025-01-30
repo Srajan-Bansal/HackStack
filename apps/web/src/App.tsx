@@ -13,7 +13,7 @@ const App = () => {
 						element={<Index />}
 					/>
 					<Route
-						path='/problem/:id'
+						path='/problem/:slug'
 						element={<Problem />}
 					/>
 				</Routes>

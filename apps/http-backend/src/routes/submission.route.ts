@@ -1,8 +1,12 @@
 import { Router } from 'express';
-import { createSubmission } from '../controller/submission.controller';
+import {
+	createBatchSubmission,
+	checkBatchSubmission,
+} from '../controller/submission.controller';
 
 const router: Router = Router();
 
-router.post('/createSubmission', createSubmission);
+router.post('/createSubmission/:problemSlug', createBatchSubmission);
+router.post('/check', checkBatchSubmission);
 
 export default router;
