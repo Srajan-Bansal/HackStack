@@ -56,7 +56,7 @@ const Problem = () => {
 		}
 	}, [slug]);
 
-	const languageId = 63;
+	const languageId = 62;
 	async function handleSubmit() {
 		if (slug && code && languageId) {
 			const response = await submitSolution(slug, code, languageId);

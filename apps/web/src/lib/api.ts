@@ -35,6 +35,6 @@ export const checkSubmission = async (tokens: string[]) => {
 		tokens,
 	});
 
-	console.log('checkSubmission', response);
+	console.log('checkSubmission', response.data);
 	return response.data;
 };

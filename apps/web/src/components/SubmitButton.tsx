@@ -4,6 +4,7 @@ const SubmitButton = ({
 	color,
 	children,
 	onClick,
+	disabled = false,
 }: {
 	color?:
 		| 'ruby'
@@ -30,6 +31,7 @@ const SubmitButton = ({
 		| 'green'
 		| 'lime';
 	children: React.ReactNode;
+	disabled?: boolean;
 	onClick?: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }) => {
 	return (
@@ -38,6 +40,7 @@ const SubmitButton = ({
 			variant='solid'
 			onClick={onClick}
 			className='cursor-pointer'
+			disabled={disabled}
 		>
 			{children}
 		</Button>

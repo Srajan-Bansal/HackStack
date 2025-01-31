@@ -19,12 +19,12 @@ async function main() {
 			testCases: {
 				create: [
 					{
-						input: 'nums = [2,7,11,15], target = 9',
+						input: '4\n2 7 11 15\n9',
 						output: '[0,1]',
 						status: TestCaseStatus.PENDING,
 					},
 					{
-						input: 'nums = [3, 2, 4], target = 6',
+						input: '3\n3 2 4\n6',
 						output: '[1,2]',
 						status: TestCaseStatus.PENDING,
 					},

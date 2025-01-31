@@ -1,0 +1,27 @@
+{
+	"name": "submission-webhook",
+	"version": "1.0.0",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc -b",
+		"start": "node dist/index.js",
+		"dev": "npm run build && node dist/index.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"express": "^4.21.2",
+		"morgan": "^1.10.0"
+	},
+	"devDependencies": {
+		"@repo/common-zod": "workspace:*",
+		"@repo/db": "workspace:*",
+		"@repo/language": "workspace:*",
+		"@repo/typescript-config": "workspace:*",
+		"@types/express": "^5.0.0",
+		"@types/morgan": "^1.9.9",
+		"@types/node": "^20.11.24"
+	}
+}

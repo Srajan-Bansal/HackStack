@@ -16,7 +16,7 @@ export const CodeEditor = ({
 				fontSize: 14,
 				scrollBeyondLastLine: false,
 			}}
-			defaultLanguage='javascript'
+			defaultLanguage='java'
 			defaultValue={value}
 			onChange={(value) => setValue(value || '')}
 		/>
