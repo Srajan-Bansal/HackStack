@@ -1,0 +1,17 @@
+{
+	"name": "boilerplate-generator",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "tsc -b",
+		"generate": "pnpm build && node dist/index.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@repo/typescript-config": "workspace:*",
+		"@types/node": "^20.11.24"
+	}
+}
