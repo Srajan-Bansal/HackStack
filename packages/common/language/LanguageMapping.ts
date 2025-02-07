@@ -1,6 +1,11 @@
-export const LanguageMapping = [
-	{ id: 62, name: 'Java' },
-	{ id: 63, name: 'JavaScript' },
-	{ id: 71, name: 'Python' },
-	{ id: 74, name: 'TypeScript' },
-];
+export const LanguageMapping: {
+	[key: string]: {
+		judge0: number;
+		internal: number;
+		name: string;
+		monaco: string;
+	};
+} = {
+	java: { judge0: 62, internal: 1, name: 'Java', monaco: 'java' },
+	js: { judge0: 63, internal: 2, name: 'JavaScript', monaco: 'javascript' },
+};
