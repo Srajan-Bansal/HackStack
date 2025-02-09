@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
+import { getProblemMarkdown } from '../utils/getProblemMarkdown';
 
 export const getProblems = async (req: Request, res: Response) => {
 	const skip = parseInt(req.query.skip as string) || 0;
@@ -9,6 +10,7 @@ export const getProblems = async (req: Request, res: Response) => {
 	const problems = await prisma.problem.findMany({
 		skip: skip,
 		take: take,
+		where: { hidden: false },
 		select: {
 			id: true,
 			title: true,
@@ -27,17 +29,27 @@ export const getProblems = async (req: Request, res: Response) => {
 export const getProblem = async (req: Request, res: Response) => {
 	const problemSlug = req.params.problemSlug as string;
 
-	if (!problemSlug) {
-		return handleError(res, 400, 'Invalid problem slug');
-	}
-
-	const problem = await prisma.problem.findUnique({
-		where: { slug: problemSlug },
+	const dbProblem = await prisma.problem.findUnique({
+		where: { slug: problemSlug, hidden: false },
 	});
-
-	if (!problem) {
+	if (!dbProblem) {
 		return handleError(res, 404, 'Problem not found');
 	}
 
-	res.status(200).json(problem);
+	const problemMarkdown = await getProblemMarkdown(problemSlug);
+
+	res.status(200).json({
+		problemMarkdown,
+	});
+};
+
+export const deleteProblem = async (req: Request, res: Response) => {
+	const problemSlug = req.params.problemSlug as string;
+
+	const problem = await prisma.problem.update({
+		where: { slug: problemSlug },
+		data: { hidden: true },
+	});
+
+	res.status(200).json({ message: 'Problem deleted successfully', problem });
 };
