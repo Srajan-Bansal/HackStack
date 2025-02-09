@@ -12,24 +12,10 @@ async function main() {
 		data: {
 			title: 'Two Sum',
 			slug: 'two-sum',
-			statement:
+			description:
 				'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
 			difficulty: Difficulty.EASY,
 			type: [ProblemType.Array, ProblemType.HashTable],
-			testCases: {
-				create: [
-					{
-						input: '4\n2 7 11 15\n9',
-						output: '[0,1]',
-						status: TestCaseStatus.PENDING,
-					},
-					{
-						input: '3\n3 2 4\n6',
-						output: '[1,2]',
-						status: TestCaseStatus.PENDING,
-					},
-				],
-			},
 		},
 	});
 
@@ -37,32 +23,18 @@ async function main() {
 		data: {
 			title: 'Reverse String',
 			slug: 'reverse-string',
-			statement: 'Write a function that reverses a string.',
+			description: 'Write a function that reverses a string.',
 			difficulty: Difficulty.EASY,
 			type: [ProblemType.String],
-			testCases: {
-				create: [
-					{
-						input: 'hello',
-						output: 'olleh',
-						status: TestCaseStatus.PENDING,
-					},
-					{
-						input: 'world',
-						output: 'dlrow',
-						status: TestCaseStatus.PENDING,
-					},
-				],
-			},
 		},
 	});
 
-	console.log('Problems and Test Cases created!');
+	console.log('✅ Problems & Test Cases Created!');
 }
 
 main()
 	.catch((e) => {
-		throw e;
+		console.error(e);
 	})
 	.finally(async () => {
 		await prisma.$disconnect();
