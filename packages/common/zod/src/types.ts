@@ -12,7 +12,6 @@ export const UserLoginSchema = z.object({
 
 export const SubmissionInputSchema = z.object({
 	code: z.string(),
-	problemId: z.number(),
 	languageId: z.enum(['java', 'js']),
 });
 
