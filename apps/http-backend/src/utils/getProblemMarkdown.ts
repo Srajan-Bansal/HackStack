@@ -7,8 +7,9 @@ export const getProblemMarkdown = async (slug: string): Promise<string> => {
 	try {
 		const filePath = path.join(
 			__dirname,
-			`../../../problems/${slug}/Problem.md`
+			`../../../apps/problems/${slug}/Problem.md`
 		);
+		console.log(filePath);
 		return await fs.readFile(filePath, { encoding: 'utf-8' });
 	} catch (error) {
 		throw new Error('Problem markdown file not found');

@@ -9,7 +9,8 @@ interface Problem {
 	outputs: string[];
 }
 
-const MOUNT_PATH = process.env.MOUNT_PATH || './../../../problems';
+const MOUNT_PATH = process.env.MOUNT_PATH || './../../apps/problems';
+
 export const getProblemCode = async (
 	slug: string,
 	languageId: SUPPORTED_LANGS
@@ -40,6 +41,28 @@ const getFullBoilerplate = async ({
 	return new Promise((resolve, reject) => {
 		fs.readFile(
 			`${MOUNT_PATH}/${slug}/boilerplate-full/function.${languageId}`,
+			{ encoding: 'utf-8' },
+			(err, data) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(data);
+				}
+			}
+		);
+	});
+};
+
+export const getPartialBoilerplate = async ({
+	slug,
+	languageId,
+}: {
+	slug: string;
+	languageId: SUPPORTED_LANGS;
+}): Promise<string> => {
+	return new Promise((resolve, reject) => {
+		fs.readFile(
+			`${MOUNT_PATH}/${slug}/boilerplate/function.${languageId}`,
 			{ encoding: 'utf-8' },
 			(err, data) => {
 				if (err) {

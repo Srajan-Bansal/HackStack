@@ -3,9 +3,9 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"scripts": {
-		"build": "tsc -b",
+		"build": "pnpm esbuild ./src/index.ts --bundle --platform=node --outfile=dist/index.js",
 		"start": "node dist/index.js",
-		"dev": "nodemon"
+		"dev": "pnpm nodemon -e ts --exec \"pnpm run build && pnpm start\""
 	},
 	"keywords": [],
 	"author": "",
@@ -29,6 +29,7 @@
 		"@types/express": "^5.0.0",
 		"@types/jsonwebtoken": "^9.0.7",
 		"@types/morgan": "^1.9.9",
+		"esbuild": "^0.25.0",
 		"nodemon": "^3.1.9",
 		"ts-node": "^10.9.1"
 	}

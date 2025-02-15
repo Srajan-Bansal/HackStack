@@ -15,11 +15,6 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			return handleError(res, 400, 'Invalid request body');
 		}
 
-		const parsedLanguageId = LanguageMapping[parsedBody.languageId];
-		if (!parsedLanguageId) {
-			return handleError(res, 400, 'Invalid language id');
-		}
-
 		const problemSlug = req.params.problemSlug as string;
 
 		const dbProblem = await prisma.problem.findUnique({
@@ -39,11 +34,13 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			parsedBody.code
 		);
 
+		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
+
 		const judge0response = await axios.post(
 			`${JUDGE_API_URL}/submissions/batch/?base64_encoded=false`,
 			{
 				submissions: problem.inputs.map((input, index) => ({
-					language_id: parsedBody.languageId,
+					language_id: language_id,
 					source_code: problem.fullBoilerPlate,
 					stdin: input,
 					expected_output: problem.outputs[index],
@@ -54,7 +51,7 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			}
 		);
 
-		const problemId = parsedBody.problemId;
+		const problemId = dbProblem.id;
 		const submission = await prisma.submission.create({
 			data: {
 				// userId: req.user.id,

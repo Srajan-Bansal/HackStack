@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import prisma from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
 import { getProblemMarkdown } from '../utils/getProblemMarkdown';
+import { getPartialBoilerplate } from '../utils/getProblemCode';
+
+type SUPPORTED_LANGS = 'java' | 'js';
 
 export const getProblems = async (req: Request, res: Response) => {
 	const skip = parseInt(req.query.skip as string) || 0;
@@ -37,9 +40,14 @@ export const getProblem = async (req: Request, res: Response) => {
 	}
 
 	const problemMarkdown = await getProblemMarkdown(problemSlug);
+	const partialBoilerpalteCode = await getPartialBoilerplate({
+		slug: problemSlug,
+		languageId: 'js',
+	});
 
 	res.status(200).json({
 		problemMarkdown,
+		partialBoilerpalteCode,
 	});
 };
 
