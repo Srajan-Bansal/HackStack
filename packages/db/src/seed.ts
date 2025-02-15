@@ -1,40 +1,32 @@
-import {
-	PrismaClient,
-	Difficulty,
-	ProblemType,
-	TestCaseStatus,
-} from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 async function main() {
-	const problem1 = await prisma.problem.create({
-		data: {
-			title: 'Two Sum',
-			slug: 'two-sum',
-			description:
-				'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-			difficulty: Difficulty.EASY,
-			type: [ProblemType.Array, ProblemType.HashTable],
-		},
-	});
+	const languages = [
+		{ id: 1, name: 'Java', judgeOId: 62 },
+		{ id: 2, name: 'JavaScript', judgeOId: 63 },
+	];
 
-	const problem2 = await prisma.problem.create({
-		data: {
-			title: 'Reverse String',
-			slug: 'reverse-string',
-			description: 'Write a function that reverses a string.',
-			difficulty: Difficulty.EASY,
-			type: [ProblemType.String],
-		},
-	});
+	for (const lang of languages) {
+		await prisma.language.upsert({
+			where: { id: lang.id },
+			update: {},
+			create: {
+				id: lang.id,
+				name: lang.name,
+				judgeOId: lang.judgeOId,
+			},
+		});
+	}
 
-	console.log('✅ Problems & Test Cases Created!');
+	console.log('Languages populated successfully!');
 }
 
 main()
 	.catch((e) => {
 		console.error(e);
+		// process.exit(1);
 	})
 	.finally(async () => {
 		await prisma.$disconnect();
