@@ -50,17 +50,10 @@ export class FullProblemDefinitionParser {
 
 	generateJsCode(): string {
 		const inputs = this.inputFields.map((field) => field.name).join(', ');
-		const jsDocParams = this.inputFields
-			.map(
-				(field) =>
-					` * @param {${this.getJsType(field.type)}} ${field.name}`
-			)
-			.join('\n');
-		const jsDocReturn = ` * @return {${this.getJsType(this.outputFields[0]?.type || 'any')}}`;
 		const inputReads = this.inputFields
 			.map((field) => {
 				if (field.type.endsWith('[]')) {
-					return `const ${field.name} = input.shift().split(',').map(${this.getJsParseFunction(field.type)});`;
+					return `const ${field.name} = input.shift().split(' ').map(${this.getJsParseFunction(field.type)});`;
 				} else {
 					return `const ${field.name} = ${this.getJsParseFunction(field.type)}(input.shift());`;
 				}
@@ -68,14 +61,8 @@ export class FullProblemDefinitionParser {
 			.join('\n');
 
 		return `
-  /**
-  ${jsDocParams}
-  ${jsDocReturn}
-   */
-  var ${this.functionName} = function(${inputs}) {
-      // Write your code here
-  };
-  
+	##USER_CODE_HERE##
+		
   const input = require('fs').readFileSync('/dev/stdin').toString().trim().split('\\n');
   ${inputReads}
   const result = ${this.functionName}(${inputs});
@@ -84,43 +71,46 @@ export class FullProblemDefinitionParser {
 	}
 
 	generateJavaCode(): string {
-		const inputs = this.inputFields
-			.map((field) => `${this.getJavaType(field.type)} ${field.name}`)
-			.join(', ');
 		const inputReads = this.inputFields
 			.map((field) => {
 				if (field.type.endsWith('[]')) {
 					const elementType = field.type.replace('[]', '');
-					return `${field.type} ${field.name} = Arrays.stream(scanner.nextLine().split(",")).mapTo${elementType}(${this.getJavaParseFunction(elementType)}::valueOf).toArray();`;
+					return `${field.type} ${field.name} = Arrays.stream(scanner.nextLine().trim().split("\\\\s+"))
+                    .mapToInt(${this.getJavaParseFunction(elementType)}::parseInt)
+                    .toArray();`;
 				} else {
-					return `${this.getJavaType(field.type)} ${field.name} = ${this.getJavaParseFunction(field.type)}(scanner.nextLine());`;
+					const reader = this.getJavaInputReader(field.type);
+					if (
+						['int', 'long', 'float', 'double'].includes(field.type)
+					) {
+						return `${this.getJavaType(field.type)} ${field.name} = ${reader};
+scanner.nextLine(); // consume newline`;
+					}
+					return `${this.getJavaType(field.type)} ${field.name} = ${reader};`;
 				}
 			})
 			.join('\n        ');
 		const outputType = this.getJavaType(
 			this.outputFields[0]?.type || 'void'
 		);
-		const functionCall = `${outputType} result = solution.${this.functionName}(${this.inputFields.map((field) => field.name).join(', ')});`;
+		const inputs = this.inputFields.map((field) => field.name).join(', ');
 		const outputWrite = this.getJavaOutputWrite(outputType);
 
 		return `
   import java.util.*;
-  import java.util.stream.*;
   
-  class Solution {
-      public ${outputType} ${this.functionName}(${inputs}) {
-          // Write your code here
-          ${outputType === 'void' ? '' : 'return null;'} // Replace with actual result
-      }
-  
+  class Main {
       public static void main(String[] args) {
-          Scanner scanner = new Scanner(System.in);
-          ${inputReads}
-          Solution solution = new Solution();
-          ${functionCall}
-          ${outputWrite}
-          scanner.close();
+		Scanner scanner = new Scanner(System.in);
+		${inputReads}
+		Main m = new Main(); 
+		Solution solution = m.new Solution();
+		${outputType} result = solution.${this.functionName}(${inputs});
+		${outputWrite}
+		scanner.close();
       }
+
+	  ##USER_CODE_HERE##
   }
       `;
 	}
@@ -141,6 +131,28 @@ export class FullProblemDefinitionParser {
 				return 'string';
 			default:
 				return 'any';
+		}
+	}
+
+	private getJavaInputReader(type: string): string {
+		switch (type) {
+			case 'int':
+				return 'scanner.nextInt()';
+			case 'long':
+				return 'scanner.nextLong()';
+			case 'float':
+				return 'scanner.nextFloat()';
+			case 'double':
+				return 'scanner.nextDouble()';
+			case 'boolean':
+				return 'scanner.nextBoolean()';
+			case 'string':
+			case 'String':
+				return 'scanner.nextLine()';
+			case 'char':
+				return 'scanner.next().charAt(0)';
+			default:
+				return 'scanner.nextLine()';
 		}
 	}
 

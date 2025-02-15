@@ -70,7 +70,7 @@ function generateFullBoilerplate(generateFilePath: string) {
 	fs.writeFileSync(path.join(boilerplatePath, 'function.java'), javaCode);
 	fs.writeFileSync(path.join(boilerplatePath, 'function.js'), jsCode);
 
-	console.log(`Boilerplate code generated successfully!`);
+	console.log(`BoilerplateFull code generated successfully!`);
 }
 
 const problemPath = './../../problems/max-element';
