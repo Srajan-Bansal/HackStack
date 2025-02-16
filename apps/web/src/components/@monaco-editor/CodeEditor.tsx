@@ -13,8 +13,12 @@ export const CodeEditor = ({
 			theme='vs-dark'
 			onMount={() => {}}
 			options={{
+				minimap: { enabled: false },
 				fontSize: 14,
+				lineNumbers: 'on',
 				scrollBeyondLastLine: false,
+				automaticLayout: true,
+				tabSize: 2,
 			}}
 			defaultLanguage='java'
 			defaultValue={value}

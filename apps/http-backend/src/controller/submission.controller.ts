@@ -44,9 +44,7 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 					source_code: problem.fullBoilerPlate,
 					stdin: input,
 					expected_output: problem.outputs[index],
-					callback_url:
-						process.env.JUDGE0_CALLBACK_URL ??
-						'http://localhost:5000/submissions-callback',
+					callback_url: 'http://localhost:5000/submissions-callback',
 				})),
 			}
 		);
