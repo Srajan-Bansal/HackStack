@@ -4,6 +4,7 @@ import ProblemCard from './../components/ProblemCard';
 import { ProblemSchema } from '@repo/common-zod/types';
 import { getProblems } from '../lib/api';
 import { z } from 'zod';
+import Spinner from '@repo/ui/components/Spinner';
 
 type ProblemType = z.infer<typeof ProblemSchema>;
 
@@ -15,7 +16,7 @@ const Index = () => {
 	}, []);
 
 	if (!problems) {
-		return <div>Loading...</div>;
+		return <Spinner />;
 	}
 
 	return (

@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
 import { getProblem, submitSolution, checkSubmission } from '../lib/api';
 import { Button } from '@repo/ui/components/Button';
+import Spinner from '@repo/ui/components/Spinner';
 
 const Problem = () => {
 	const { slug } = useParams<{ slug: string }>();
@@ -23,7 +24,7 @@ const Problem = () => {
 		}
 	}, [slug]);
 
-	const languageId = 'js';
+	const languageId = 'java';
 	async function handleSubmit() {
 		if (slug && code && languageId) {
 			const response = await submitSolution(slug, code, languageId);
@@ -42,7 +43,7 @@ const Problem = () => {
 	}
 
 	if (!problem) {
-		return <div>Problem not found</div>;
+		return <Spinner />;
 	}
 
 	return (

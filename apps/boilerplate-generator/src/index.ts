@@ -73,7 +73,7 @@ function generateFullBoilerplate(generateFilePath: string) {
 	console.log(`BoilerplateFull code generated successfully!`);
 }
 
-const problemPath = './../../problems/max-element';
+const problemPath = './../../problems/reverse-string';
 
 // Generate boilerplate code
 generatePartialBoilerplate(problemPath);

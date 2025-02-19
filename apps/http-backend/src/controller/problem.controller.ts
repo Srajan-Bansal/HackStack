@@ -42,7 +42,7 @@ export const getProblem = async (req: Request, res: Response) => {
 	const problemMarkdown = await getProblemMarkdown(problemSlug);
 	const partialBoilerpalteCode = await getPartialBoilerplate({
 		slug: problemSlug,
-		languageId: 'js',
+		languageId: 'java',
 	});
 
 	res.status(200).json({

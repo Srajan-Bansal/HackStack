@@ -11,11 +11,11 @@ const Header = () => {
 						className='flex items-center gap-2'
 					>
 						<Code2 className='h-6 w-6' />
-						<span className='text-xl font-bold'>CodeChallenge</span>
+						<span className='text-xl font-bold'>HackStack</span>
 					</Link>
 					<nav className='flex gap-4'>
 						<Link
-							to='/'
+							to='/problemset'
 							className='text-foreground/60 hover:text-foreground'
 						>
 							Problems
