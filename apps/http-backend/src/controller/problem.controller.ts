@@ -3,8 +3,7 @@ import prisma from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
 import { getProblemMarkdown } from '../utils/getProblemMarkdown';
 import { getPartialBoilerplate } from '../utils/getProblemCode';
-
-type SUPPORTED_LANGS = 'java' | 'js';
+import { LanguageMapping } from '@repo/language/LanguageMapping';
 
 export const getProblems = async (req: Request, res: Response) => {
 	const skip = parseInt(req.query.skip as string) || 0;
@@ -31,6 +30,7 @@ export const getProblems = async (req: Request, res: Response) => {
 
 export const getProblem = async (req: Request, res: Response) => {
 	const problemSlug = req.params.problemSlug as string;
+	const languageId = req.query.languageId as string;
 
 	const dbProblem = await prisma.problem.findUnique({
 		where: { slug: problemSlug, hidden: false },
@@ -39,14 +39,50 @@ export const getProblem = async (req: Request, res: Response) => {
 		return handleError(res, 404, 'Problem not found');
 	}
 
+	const language = LanguageMapping[languageId];
+	if (!language) {
+		return handleError(res, 400, 'Unsupported language');
+	}
+
 	const problemMarkdown = await getProblemMarkdown(problemSlug);
 	const partialBoilerpalteCode = await getPartialBoilerplate({
 		slug: problemSlug,
-		languageId: 'java',
+		fileExtension: language.fileExtension,
 	});
 
 	res.status(200).json({
 		problemMarkdown,
+		partialBoilerpalteCode,
+	});
+};
+
+export const getPartialBoilerplateCodeByLanguageId = async (
+	req: Request,
+	res: Response
+) => {
+	const problemSlug = req.params.problemSlug as string;
+	const languageId = req.query.languageId as string;
+
+	const problem = await prisma.problem.findUnique({
+		where: { slug: problemSlug },
+		select: { id: true, slug: true },
+	});
+
+	if (!problem) {
+		return handleError(res, 404, 'Problem not found');
+	}
+
+	const language = LanguageMapping[languageId];
+	if (!language) {
+		return handleError(res, 400, 'Unsupported language');
+	}
+
+	const partialBoilerpalteCode = await getPartialBoilerplate({
+		slug: problemSlug,
+		fileExtension: language.fileExtension,
+	});
+
+	res.status(200).json({
 		partialBoilerpalteCode,
 	});
 };

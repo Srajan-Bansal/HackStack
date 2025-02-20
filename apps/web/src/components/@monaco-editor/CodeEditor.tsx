@@ -3,9 +3,11 @@ import Editor from '@monaco-editor/react';
 export const CodeEditor = ({
 	value,
 	setValue,
+	language,
 }: {
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
+	language: string;
 }) => {
 	return (
 		<Editor
@@ -20,7 +22,7 @@ export const CodeEditor = ({
 				automaticLayout: true,
 				tabSize: 2,
 			}}
-			defaultLanguage='java'
+			defaultLanguage={language}
 			defaultValue={value}
 			onChange={(value) => setValue(value || '')}
 		/>

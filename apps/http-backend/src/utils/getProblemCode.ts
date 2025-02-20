@@ -1,7 +1,5 @@
 import fs from 'fs';
 
-type SUPPORTED_LANGS = 'java' | 'js';
-
 interface Problem {
 	slug: string;
 	fullBoilerPlate: string;
@@ -13,11 +11,11 @@ const MOUNT_PATH = process.env.MOUNT_PATH || './../../apps/problems';
 
 export const getProblemCode = async (
 	slug: string,
-	languageId: SUPPORTED_LANGS
+	fileExtension: string
 ): Promise<Problem> => {
 	const fullBoilerPlate = await getFullBoilerplate({
 		slug,
-		languageId,
+		fileExtension,
 	});
 
 	const inputs = await getProblemInputs(slug);
@@ -33,14 +31,14 @@ export const getProblemCode = async (
 
 const getFullBoilerplate = async ({
 	slug,
-	languageId,
+	fileExtension,
 }: {
 	slug: string;
-	languageId: SUPPORTED_LANGS;
+	fileExtension: string;
 }): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fs.readFile(
-			`${MOUNT_PATH}/${slug}/boilerplate-full/function.${languageId}`,
+			`${MOUNT_PATH}/${slug}/boilerplate-full/function.${fileExtension}`,
 			{ encoding: 'utf-8' },
 			(err, data) => {
 				if (err) {
@@ -55,14 +53,14 @@ const getFullBoilerplate = async ({
 
 export const getPartialBoilerplate = async ({
 	slug,
-	languageId,
+	fileExtension,
 }: {
 	slug: string;
-	languageId: SUPPORTED_LANGS;
+	fileExtension: string;
 }): Promise<string> => {
 	return new Promise((resolve, reject) => {
 		fs.readFile(
-			`${MOUNT_PATH}/${slug}/boilerplate/function.${languageId}`,
+			`${MOUNT_PATH}/${slug}/boilerplate/function.${fileExtension}`,
 			{ encoding: 'utf-8' },
 			(err, data) => {
 				if (err) {

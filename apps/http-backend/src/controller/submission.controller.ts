@@ -35,6 +35,7 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 		);
 
 		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
+		console.log('language_id', language_id);
 
 		const judge0response = await axios.post(
 			`${JUDGE_API_URL}/submissions/batch/?base64_encoded=false`,

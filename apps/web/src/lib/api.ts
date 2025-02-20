@@ -8,11 +8,29 @@ export const getProblems = async () => {
 	return response.data;
 };
 
-export const getProblem = async (problemSlug: string) => {
+export const getProblem = async (problemSlug: string, languageId: string) => {
 	const response = await axios.get(
-		`${BACKEND_URL}/api/v1/problem/${problemSlug}`
+		`${BACKEND_URL}/api/v1/problem/${problemSlug}`,
+		{
+			params: { languageId },
+		}
 	);
 	console.log('getProblem', response.data);
+	return response.data;
+};
+
+export const getBoilerplateCode = async (
+	problemSlug: string,
+	languageId: string
+) => {
+	const response = await axios.get(
+		`${BACKEND_URL}/api/v1/problem/${problemSlug}/getBoilerplateCode`,
+		{
+			params: { languageId },
+		}
+	);
+
+	console.log('getBoilerplateCode', response);
 	return response.data;
 };
 
