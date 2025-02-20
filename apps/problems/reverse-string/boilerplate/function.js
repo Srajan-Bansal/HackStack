@@ -1,9 +1,9 @@
 
   /**
-   * @param {any} input
+   * @param {any} str
    * @return {any}
    */
-  function reverseString(input) {
+  function reverseString(str) {
       // Write your code here
       return null; // Replace with actual result
   }

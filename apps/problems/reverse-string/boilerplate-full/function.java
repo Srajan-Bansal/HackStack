@@ -4,10 +4,10 @@
   class Main {
       public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		String input = scanner.nextLine();
+		String str = scanner.nextLine();
 		Main m = new Main(); 
 		Solution solution = m.new Solution();
-		String result = solution.reverseString(input);
+		String result = solution.reverseString(str);
 		System.out.println(result);
 		scanner.close();
       }
