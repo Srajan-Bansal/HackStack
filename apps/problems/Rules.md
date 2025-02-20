@@ -8,7 +8,7 @@
 
 3. Define the input structure:
    Input Structure:
-   Input Field: type name
+   Input Field: type name (Do no put input as input name)
 
 4. Define the output structure:
    Output Structure:
