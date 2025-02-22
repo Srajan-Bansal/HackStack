@@ -34,6 +34,19 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			parsedBody.code
 		);
 
+		const problemId = dbProblem.id;
+		const submission = await prisma.submission.create({
+			data: {
+				// userId: req.user.id,
+				problemId: problemId,
+				languageId:
+					LanguageMapping[parsedBody.languageId]?.internal ?? 0,
+				code: parsedBody.code,
+				fullCode: problem.fullBoilerPlate,
+				status: 'PENDING',
+			},
+		});
+
 		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
 
 		const judge0response = await axios.post(
@@ -49,19 +62,6 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			}
 		);
 
-		const problemId = dbProblem.id;
-		const submission = await prisma.submission.create({
-			data: {
-				// userId: req.user.id,
-				problemId: problemId,
-				languageId:
-					LanguageMapping[parsedBody.languageId]?.internal ?? 0,
-				code: parsedBody.code,
-				fullCode: problem.fullBoilerPlate,
-				status: 'PENDING',
-			},
-		});
-
 		await prisma.testCase.createMany({
 			data: problem.inputs.map((input, index) => ({
 				submissionId: submission.id,
@@ -73,6 +73,9 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			})),
 		});
 
+		// console.log(judge0response.config);
+		console.log(judge0response.status);
+		console.log(judge0response.statusText);
 		res.status(200).json({
 			submissionId: submission.id,
 			judge0response: judge0response.data,

@@ -3,6 +3,7 @@ import CodeEditor from '../components/@monaco-editor/CodeEditor';
 import { Button } from '@repo/ui/components/Button';
 import { LanguageSelect } from '@repo/ui/components/LanguageSelect';
 import { submitSolution, checkBatchSubmission } from '../lib/api';
+import { toast } from '@repo/ui/components/sonner';
 
 enum SubmitStatus {
 	PENDING,
@@ -55,21 +56,20 @@ const ProblemSubmitBar = ({
 			if (tokens.length === 0 || retries >= maxRetries) {
 				clearInterval(interval);
 				setStatus(SubmitStatus.ACTIVE);
+
+				if (retries >= maxRetries) {
+					toast.error('Submission failed. Please try again.');
+				}
 				return;
 			}
 
-			console.log(
-				'Checking submission status:',
-				tokens,
-				'retry:',
-				retries
-			);
 			const response = await checkBatchSubmission(tokens);
 
 			if (response && response.length) {
 				const pendingTokens = response
 					.filter(
-						(sub: { status: { id: number } }) => sub.status.id === 1
+						(sub: { status: { id: number } }) =>
+							sub.status.id === 1 || sub.status.id === 2
 					)
 					.map((sub: { token: string }) => sub.token);
 
@@ -78,13 +78,15 @@ const ProblemSubmitBar = ({
 				if (pendingTokens.length === 0) {
 					clearInterval(interval);
 					setStatus(SubmitStatus.ACTIVE);
-					console.log('Submission Completed:', response);
+					toast.success('Submission completed successfully!');
 					return;
 				}
 			}
 
 			retries++;
 		}, POLL_INTERVAL);
+
+		return () => clearInterval(interval);
 	}
 
 	return (
@@ -92,14 +94,12 @@ const ProblemSubmitBar = ({
 			<h2 className='text-xl font-semibold text-gray-800 mb-4'>
 				Code Editor
 			</h2>
-
 			<div className='mb-4'>
 				<LanguageSelect
 					selectedLanguage={selectedLanguage}
 					setSelectedLanguage={setSelectedLanguage}
 				/>
 			</div>
-
 			<div className='border border-gray-300 rounded-lg overflow-hidden mb-4'>
 				<CodeEditor
 					key={selectedLanguage?.monaco}
@@ -108,7 +108,6 @@ const ProblemSubmitBar = ({
 					language={selectedLanguage?.monaco || 'java'}
 				/>
 			</div>
-
 			<div className='flex justify-end space-x-4 mt-4'>
 				<Button
 					type='submit'
