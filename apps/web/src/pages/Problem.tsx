@@ -1,25 +1,17 @@
 import { useParams } from 'react-router-dom';
 import Header from './../components/Header';
-import { CodeEditor } from '../components/@monaco-editor/CodeEditor';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
-import {
-	getProblem,
-	submitSolution,
-	checkSubmission,
-	getBoilerplateCode,
-} from '../lib/api';
-import { Button } from '@repo/ui/components/Button';
+import { getProblem, getBoilerplateCode } from '../lib/api';
+import ProblemSubmitBar from '../components/ProblemSubmitBar';
 import Spinner from '@repo/ui/components/Spinner';
-import { LanguageSelect } from '@repo/ui/components/LanguageSelect';
 import { LanguageMapping } from '@repo/language/LanguageMapping';
 
 const Problem = () => {
-	const { slug } = useParams<{ slug: string }>();
+	const { slug = '' } = useParams<{ slug: string }>();
 	const [problem, setProblem] = useState<string | null>(null);
 	const [code, setCode] = useState<string>('');
-	const [tokens, setTokens] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedLanguage, setSelectedLanguage] = useState(() => {
 		return (
@@ -36,48 +28,35 @@ const Problem = () => {
 
 	useEffect(() => {
 		if (slug && selectedLanguage) {
-			getProblem(slug, selectedLanguage.value).then((data) => {
-				setProblem(data.problemMarkdown);
-				setCode(data.partialBoilerpalteCode);
-			});
+			getProblem(slug, selectedLanguage.value)
+				.then((data) => {
+					if (data) {
+						setProblem(data.problemMarkdown);
+						setCode(data.partialBoilerpalteCode || '');
+					}
+				})
+				.catch(() => setProblem('Failed to load problem description.'));
 		}
 	}, [slug]);
 
 	useEffect(() => {
 		if (slug && selectedLanguage) {
 			setIsLoading(true);
-
 			getBoilerplateCode(slug, selectedLanguage.value)
 				.then((data) => {
-					setCode(data.partialBoilerpalteCode);
+					if (data) setCode(data.partialBoilerpalteCode || '');
 				})
-				.catch(() => setCode('// Failed to load boilerpate code'))
+				.catch(() => setCode('// Failed to load boilerplate code'))
 				.finally(() => setIsLoading(false));
 		}
 	}, [selectedLanguage]);
 
-	async function handleSubmit() {
-		if (slug && code && selectedLanguage) {
-			const response = await submitSolution(
-				slug,
-				code,
-				selectedLanguage.value
-			);
-			setTokens(response.judge0response);
-		}
-	}
-
-	async function handleCheckResult() {
-		if (slug && tokens) {
-			const response = await checkSubmission(tokens);
-			console.log(response);
-		} else {
-			console.log('No tokens');
-		}
-	}
-
 	if (!problem) {
-		return <Spinner />;
+		return (
+			<div className='flex items-center justify-center h-screen'>
+				<Spinner />
+			</div>
+		);
 	}
 
 	return (
@@ -89,34 +68,13 @@ const Problem = () => {
 						{problem || 'No description available.'}
 					</Markdown>
 				</div>
-				<div className='w-1/2 py-8'>
-					<LanguageSelect
-						selectedLanguage={selectedLanguage}
-						setSelectedLanguage={setSelectedLanguage}
-					/>
-
-					{!isLoading && (
-						<CodeEditor
-							key={selectedLanguage?.monaco}
-							value={code}
-							setValue={setCode}
-							language={selectedLanguage?.monaco || 'java'}
-						/>
-					)}
-
-					<Button
-						size='sm'
-						onClick={handleSubmit}
-					>
-						Submit
-					</Button>
-					<Button
-						size='sm'
-						onClick={handleCheckResult}
-					>
-						Result
-					</Button>
-				</div>
+				<ProblemSubmitBar
+					slug={slug}
+					code={code}
+					setCode={setCode}
+					selectedLanguage={selectedLanguage}
+					setSelectedLanguage={setSelectedLanguage}
+				/>
 			</div>
 		</div>
 	);

@@ -35,7 +35,6 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 		);
 
 		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
-		console.log('language_id', language_id);
 
 		const judge0response = await axios.post(
 			`${JUDGE_API_URL}/submissions/batch/?base64_encoded=false`,
@@ -84,14 +83,14 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 };
 
 export const checkBatchSubmission = async (req: Request, res: Response) => {
-	const tokens: { token: string }[] = req.body.tokens;
+	const tokens: string[] = req.body.tokens;
 
 	if (!tokens || tokens.length === 0) {
 		return handleError(res, 400, 'Token is required');
 	}
 
 	try {
-		const tokenQuery = tokens.map((x) => x.token).join(',');
+		const tokenQuery = tokens.join(',');
 		const judge0response = await axios.get(
 			`${JUDGE_API_URL}/submissions/batch?tokens=${tokenQuery}&base64_encoded=false`
 		);
