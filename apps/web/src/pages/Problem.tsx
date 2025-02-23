@@ -7,6 +7,11 @@ import { getProblem, getBoilerplateCode } from '../lib/api';
 import ProblemSubmitBar from '../components/ProblemSubmitBar';
 import Spinner from '@repo/ui/components/Spinner';
 import { LanguageMapping } from '@repo/language/LanguageMapping';
+import {
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from '@repo/ui/components/Resizable';
 
 const Problem = () => {
 	const { slug = '' } = useParams<{ slug: string }>();
@@ -63,18 +68,36 @@ const Problem = () => {
 		<div className='min-h-screen bg-background'>
 			<Header />
 			<div className='flex mx-6'>
-				<div className='container py-8 flex gap-8 flex-col w-1/2'>
-					<Markdown rehypePlugins={[remarkGfm]}>
-						{problem || 'No description available.'}
-					</Markdown>
-				</div>
-				<ProblemSubmitBar
-					slug={slug}
-					code={code}
-					setCode={setCode}
-					selectedLanguage={selectedLanguage}
-					setSelectedLanguage={setSelectedLanguage}
-				/>
+				<ResizablePanelGroup direction='horizontal'>
+					<ResizablePanel
+						minSize={20}
+						maxSize={80}
+						defaultSize={50}
+					>
+						<div className='container py-8 flex gap-8 flex-col w-full min-w-0'>
+							<Markdown rehypePlugins={[remarkGfm]}>
+								{problem || 'No description available.'}
+							</Markdown>
+						</div>
+					</ResizablePanel>
+					<ResizableHandle
+						withHandle
+						className='border-none focus:ring-0'
+					/>
+					<ResizablePanel
+						minSize={20}
+						maxSize={80}
+						defaultSize={50}
+					>
+						<ProblemSubmitBar
+							slug={slug}
+							code={code}
+							setCode={setCode}
+							selectedLanguage={selectedLanguage}
+							setSelectedLanguage={setSelectedLanguage}
+						/>
+					</ResizablePanel>
+				</ResizablePanelGroup>
 			</div>
 		</div>
 	);

@@ -90,7 +90,7 @@ const ProblemSubmitBar = ({
 	}
 
 	return (
-		<div className='w-1/2 bg-white shadow-lg rounded-lg p-6'>
+		<div className='flex flex-col h-full w-full min-w-0 bg-white shadow-lg rounded-lg p-6'>
 			<h2 className='text-xl font-semibold text-gray-800 mb-4'>
 				Code Editor
 			</h2>
@@ -100,7 +100,7 @@ const ProblemSubmitBar = ({
 					setSelectedLanguage={setSelectedLanguage}
 				/>
 			</div>
-			<div className='border border-gray-300 rounded-lg overflow-hidden mb-4'>
+			<div className='flex-1 border border-gray-300 rounded-lg overflow-hidden mb-4'>
 				<CodeEditor
 					key={selectedLanguage?.monaco}
 					value={code}
