@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import CodeEditor from '../components/@monaco-editor/CodeEditor';
 import { Button } from '@repo/ui/components/Button';
 import { LanguageSelect } from '@repo/ui/components/LanguageSelect';
@@ -25,6 +25,7 @@ const ProblemSubmitBar = ({
 }) => {
 	const [tokens, setTokens] = useState<string[]>([]);
 	const [status, setStatus] = useState<SubmitStatus>();
+	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const POLL_INTERVAL = 5000;
 	const MAX_RETRIES = 4;
 
@@ -38,23 +39,26 @@ const ProblemSubmitBar = ({
 			selectedLanguage.value
 		);
 		if (response && response.judge0response) {
-			setTokens(
-				response.judge0response.map(
-					(sub: { token: string }) => sub.token
-				)
+			const newTokens = response.judge0response.map(
+				(sub: { token: string }) => sub.token
 			);
-			pollForResult(MAX_RETRIES);
+			setTokens(newTokens);
+			pollForResult(newTokens, MAX_RETRIES);
 		} else {
 			setStatus(SubmitStatus.ACTIVE);
 		}
 	}
 
-	function pollForResult(maxRetries: number) {
+	function pollForResult(currentTokens: string[], maxRetries: number) {
 		let retries = 0;
 
-		const interval = setInterval(async () => {
-			if (tokens.length === 0 || retries >= maxRetries) {
-				clearInterval(interval);
+		if (intervalRef.current) {
+			clearInterval(intervalRef.current);
+		}
+
+		intervalRef.current = setInterval(async () => {
+			if (currentTokens.length === 0 || retries >= maxRetries) {
+				clearInterval(intervalRef.current!);
 				setStatus(SubmitStatus.ACTIVE);
 
 				if (retries >= maxRetries) {
@@ -63,7 +67,8 @@ const ProblemSubmitBar = ({
 				return;
 			}
 
-			const response = await checkBatchSubmission(tokens);
+			const response = await checkBatchSubmission(currentTokens);
+			console.log('Batch Response:', response);
 
 			if (response && response.submissions) {
 				const submissions = response.submissions;
@@ -71,9 +76,8 @@ const ProblemSubmitBar = ({
 				const failedSubmissions = submissions.filter(
 					(sub: { status: { id: number } }) => sub.status.id >= 4
 				);
-
 				if (failedSubmissions.length > 0) {
-					clearInterval(interval);
+					clearInterval(intervalRef.current!);
 					setStatus(SubmitStatus.ACTIVE);
 					toast.error(
 						'Submission failed. Check your code and try again.'
@@ -88,21 +92,19 @@ const ProblemSubmitBar = ({
 					)
 					.map((sub: { token: string }) => sub.token);
 
-				setTokens(pendingTokens);
-
-				console.log('pendingTokens', pendingTokens);
 				if (pendingTokens.length === 0) {
-					clearInterval(interval);
+					clearInterval(intervalRef.current!);
 					setStatus(SubmitStatus.ACTIVE);
 					toast.success('Submission completed successfully!');
 					return;
 				}
+
+				setTokens(pendingTokens);
+				currentTokens = pendingTokens;
 			}
 
 			retries++;
 		}, POLL_INTERVAL);
-
-		return () => clearInterval(interval);
 	}
 
 	return (
