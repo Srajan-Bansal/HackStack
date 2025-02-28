@@ -26,7 +26,7 @@ const ProblemSubmitBar = ({
 	const [tokens, setTokens] = useState<string[]>([]);
 	const [status, setStatus] = useState<SubmitStatus>();
 	const POLL_INTERVAL = 5000;
-	const MAX_RETRIES = 10;
+	const MAX_RETRIES = 4;
 
 	async function handleSubmit() {
 		if (!slug || !code || !selectedLanguage) return;
@@ -65,8 +65,23 @@ const ProblemSubmitBar = ({
 
 			const response = await checkBatchSubmission(tokens);
 
-			if (response && response.length) {
-				const pendingTokens = response
+			if (response && response.submissions) {
+				const submissions = response.submissions;
+
+				const failedSubmissions = submissions.filter(
+					(sub: { status: { id: number } }) => sub.status.id >= 4
+				);
+
+				if (failedSubmissions.length > 0) {
+					clearInterval(interval);
+					setStatus(SubmitStatus.ACTIVE);
+					toast.error(
+						'Submission failed. Check your code and try again.'
+					);
+					return;
+				}
+
+				const pendingTokens = submissions
 					.filter(
 						(sub: { status: { id: number } }) =>
 							sub.status.id === 1 || sub.status.id === 2
@@ -75,6 +90,7 @@ const ProblemSubmitBar = ({
 
 				setTokens(pendingTokens);
 
+				console.log('pendingTokens', pendingTokens);
 				if (pendingTokens.length === 0) {
 					clearInterval(interval);
 					setStatus(SubmitStatus.ACTIVE);

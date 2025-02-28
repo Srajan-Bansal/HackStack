@@ -6,7 +6,7 @@
 		"dev": "turbo dev",
 		"lint": "turbo lint",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
-		"web": "turbo run dev --filter=web --filter=http-backend"
+		"web": "turbo run dev --filter=!submission-webhook"
 	},
 	"devDependencies": {
 		"prettier": "^3.2.5",

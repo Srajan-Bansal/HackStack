@@ -12,6 +12,9 @@ app.use(express.json());
 app.post('/submissions-callback', async (req: Request, res: Response) => {
 	try {
 		const parsedBody = SubmissionCallback.parse(req.body);
+		if (!parsedBody) {
+			res.status(400).json({ error: 'Invalid data' });
+		}
 
 		const testCase = await prisma.testCase.update({
 			where: { judge0TrackingId: parsedBody.data.token },

@@ -1,25 +1,5 @@
 import { z } from 'zod';
 
-export const UserSchema = z.object({
-	id: z.string().uuid(),
-	email: z.string().email(),
-	name: z.string().nullable(),
-	provider: z.enum(['email', 'google', 'github']),
-	password: z.string(),
-	role: z.enum(['USER', 'ADMIN']),
-	createdAt: z.date(),
-});
-
-export type User = z.infer<typeof UserSchema>;
-
-export const OAuthProfileSchema = z.object({
-	emails: z.array(z.object({ value: z.string().email() })).optional(),
-	displayName: z.string().optional(),
-	username: z.string().optional(),
-});
-
-export type OAuthProfile = z.infer<typeof OAuthProfileSchema>;
-
 export const UserSignupSchema = z.object({
 	email: z.string().email(),
 	password: z.string().min(5).max(20),

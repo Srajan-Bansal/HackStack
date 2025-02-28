@@ -73,9 +73,6 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			})),
 		});
 
-		// console.log(judge0response.config);
-		console.log(judge0response.status);
-		console.log(judge0response.statusText);
 		res.status(200).json({
 			submissionId: submission.id,
 			judge0response: judge0response.data,
