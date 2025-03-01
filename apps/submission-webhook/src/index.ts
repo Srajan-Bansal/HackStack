@@ -1,4 +1,4 @@
-import express, { type Request, type Response } from 'express';
+import express, { Request, Response } from 'express';
 import morgan from 'morgan';
 import prisma, { SubmissionStatus } from '@repo/db/client';
 import { SubmissionCallback } from '@repo/common-zod/types';
@@ -9,7 +9,7 @@ const app = express();
 app.use(morgan('dev'));
 app.use(express.json());
 
-app.post('/submissions-callback', async (req: Request, res: Response) => {
+app.put('/submissions-callback', async (req: Request, res: Response) => {
 	try {
 		const parsedBody = SubmissionCallback.parse(req.body);
 		if (!parsedBody) {
@@ -17,11 +17,11 @@ app.post('/submissions-callback', async (req: Request, res: Response) => {
 		}
 
 		const testCase = await prisma.testCase.update({
-			where: { judge0TrackingId: parsedBody.data.token },
+			where: { judge0TrackingId: parsedBody.token },
 			data: {
-				status: { set: outMapping[parsedBody.data.status.description] },
-				runtime: parseFloat(parsedBody.data.time),
-				memory: parsedBody.data.memory,
+				status: { set: outMapping[parsedBody.status.description] },
+				runtime: parseFloat(parsedBody.time),
+				memory: parsedBody.memory,
 			},
 			select: { submissionId: true },
 		});
@@ -65,7 +65,6 @@ app.post('/submissions-callback', async (req: Request, res: Response) => {
 
 		res.status(200).json({ message: 'Test case updated successfully' });
 	} catch (error) {
-		console.error('Error updating test case:', error);
 		res.status(500).json({
 			error: 'Internal Server Error',
 			details: error,
@@ -73,6 +72,10 @@ app.post('/submissions-callback', async (req: Request, res: Response) => {
 	}
 });
 
-app.listen(5000, () => {
+app.get('/', (req, res) => {
+	res.send('Hello World!');
+});
+
+app.listen(5000, '0.0.0.0', () => {
 	console.log('Server is running on port 5000');
 });

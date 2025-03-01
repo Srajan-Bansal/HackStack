@@ -34,17 +34,15 @@ export const ProblemSchema = z.object({
 });
 
 export const SubmissionCallback = z.object({
-	data: z.object({
-		stdout: z.string().nullable(),
-		time: z.string(),
-		memory: z.number(),
-		stderr: z.string().nullable(),
-		token: z.string(),
-		compile_output: z.string().nullable(),
-		message: z.string().nullable(),
-		status: z.object({
-			id: z.number(),
-			description: z.string(),
-		}),
+	stdout: z.string().nullable(),
+	time: z.string(),
+	memory: z.number(),
+	stderr: z.string().nullable(),
+	token: z.string(),
+	compile_output: z.string().nullable(),
+	message: z.string().nullable(),
+	status: z.object({
+		id: z.number(),
+		description: z.string(),
 	}),
 });

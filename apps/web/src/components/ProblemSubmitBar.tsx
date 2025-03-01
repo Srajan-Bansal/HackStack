@@ -123,7 +123,7 @@ const ProblemSubmitBar = ({
 					key={selectedLanguage?.monaco}
 					value={code}
 					onChange={(value) => setCode(value || '')}
-					language={selectedLanguage?.monaco || 'java'}
+					language={selectedLanguage?.monaco}
 				/>
 			</div>
 			<div className='flex justify-end space-x-4 mt-4'>

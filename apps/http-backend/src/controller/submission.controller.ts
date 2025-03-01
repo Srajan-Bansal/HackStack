@@ -6,7 +6,8 @@ import { handleError } from '../utils/errorHandler';
 import { LanguageMapping } from '@repo/language/LanguageMapping';
 import { getProblemCode } from '../utils/getProblemCode';
 
-const JUDGE_API_URL = process.env.JUDGE_API_URL || 'http://localhost:2358';
+const JUDGE_API_URL = process.env.JUDGE_API_URL;
+const JUDGE0_CALLBACK_URL = process.env.JUDGE0_CALLBACK_URL;
 
 export const createBatchSubmission = async (req: Request, res: Response) => {
 	try {
@@ -57,7 +58,7 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 					source_code: problem.fullBoilerPlate,
 					stdin: input,
 					expected_output: problem.outputs[index],
-					callback_url: 'http://localhost:5000/submissions-callback',
+					callback_url: JUDGE0_CALLBACK_URL,
 				})),
 			}
 		);

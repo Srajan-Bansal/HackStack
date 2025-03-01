@@ -21,7 +21,7 @@ app.use('/api/v1', authRouter);
 app.use('/api/v1', problemRouter);
 app.use('/api/v1', submissionRouter);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 const server = app.listen(PORT, () => {
 	console.log(`Server is running on port ${PORT}`);
 });
