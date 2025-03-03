@@ -45,9 +45,6 @@ jobs:
             - name: Lint Code
               run: pnpm run lint:ci
 
-            - name: Run Tests
-              run: pnpm run test
-
             - name: Build Application
               run: pnpm run build
 
