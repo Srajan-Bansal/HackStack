@@ -17,6 +17,7 @@ const Problem = () => {
 	const { slug = '' } = useParams<{ slug: string }>();
 	const [problem, setProblem] = useState<string | null>(null);
 	const [code, setCode] = useState<string>('');
+	// @ts-ignore
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedLanguage, setSelectedLanguage] = useState(() => {
 		return (

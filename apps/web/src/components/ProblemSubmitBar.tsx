@@ -42,6 +42,7 @@ const ProblemSubmitBar = ({
 			const newTokens = response.judge0response.map(
 				(sub: { token: string }) => sub.token
 			);
+			console.log('Tokens:', tokens);
 			setTokens(newTokens);
 			pollForResult(newTokens, MAX_RETRIES);
 		} else {
