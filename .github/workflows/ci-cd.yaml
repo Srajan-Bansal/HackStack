@@ -17,7 +17,7 @@ jobs:
             - name: Setup PNPM
               uses: pnpm/action-setup@v2
               with:
-                  version: 8
+                  version: 9.0.0
                   run_install: false
 
             - name: Setup Node.js
@@ -28,6 +28,9 @@ jobs:
 
             - name: Install Dependencies
               run: pnpm install
+
+            - name: Generate Prisma Client
+              run: pnpm prisma:generate
 
             - name: Restore turbo cache
               uses: actions/cache@v3
@@ -40,7 +43,7 @@ jobs:
                       ${{ runner.os }}-turbo-
 
             - name: Lint Code
-              run: pnpm run lint
+              run: pnpm run lint:ci
 
             - name: Run Tests
               run: pnpm run test

@@ -5,8 +5,10 @@
 		"build": "turbo build",
 		"dev": "turbo dev",
 		"lint": "turbo lint",
+		"lint:ci": "turbo lint:ci",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
-		"web": "turbo run dev --filter=!submission-webhook"
+		"web": "turbo run dev --filter=!submission-webhook",
+		"prisma:generate": "pnpm --filter @repo/db exec pnpm prisma generate"
 	},
 	"devDependencies": {
 		"prettier": "^3.2.5",
