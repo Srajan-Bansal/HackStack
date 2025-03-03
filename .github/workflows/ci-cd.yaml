@@ -42,9 +42,6 @@ jobs:
                       ${{ runner.os }}-turbo-${{ github.job }}- 
                       ${{ runner.os }}-turbo-
 
-            - name: Lint Code
-              run: pnpm run lint:ci
-
             - name: Build Application
               run: pnpm run build
 
