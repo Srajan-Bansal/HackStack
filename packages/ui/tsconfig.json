@@ -5,6 +5,7 @@
 		"declaration": true,
 		"declarationMap": true,
 		"emitDeclarationOnly": false,
+		"rootDir": ".",
 		"baseUrl": ".",
 		"paths": {
 			"@workspace/ui/*": ["./src/*"]
