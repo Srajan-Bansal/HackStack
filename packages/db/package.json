@@ -8,13 +8,14 @@
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"seed": "ts-node ./src/seed.ts"
+		"seedLanguage": "ts-node ./src/seedLanguage.ts"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
 		"@repo/typescript-config": "workspace:*",
+		"@repo/http-backend": "workspace:*",
 		"prisma": "^6.2.1",
 		"ts-node": "^10.9.1"
 	},

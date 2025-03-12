@@ -35,16 +35,17 @@ model Problem {
 }
 
 model DefaultCode {
-  id         String   @id @default(uuid())
-  code       String
-  Language   Language @relation(fields: [languageId], references: [id])
-  languageId Int
-  Problem    Problem  @relation(fields: [problemId], references: [id])
-  problemId  Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String          @id @default(uuid())
+  code            String
+  Language        Language        @relation(fields: [languageId], references: [id])
+  languageId      Int
+  Problem         Problem         @relation(fields: [problemId], references: [id])
+  DefaultCodeType DefaultCodeType
+  problemId       Int
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
 
-  @@unique([problemId, languageId])
+  @@unique([problemId, languageId, DefaultCodeType])
 }
 
 model TestCase {
@@ -110,6 +111,11 @@ enum Difficulty {
   EASY
   MEDIUM
   HARD
+}
+
+enum DefaultCodeType {
+  FULLBOILERPLATECODE
+  PARTIALBOILERPLATECODE
 }
 
 enum ProblemType {

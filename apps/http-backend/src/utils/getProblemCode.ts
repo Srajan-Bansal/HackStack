@@ -29,7 +29,7 @@ export const getProblemCode = async (
 	};
 };
 
-const getFullBoilerplate = async ({
+export const getFullBoilerplate = async ({
 	slug,
 	fileExtension,
 }: {

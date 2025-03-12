@@ -46,3 +46,13 @@ export const SubmissionCallback = z.object({
 		description: z.string(),
 	}),
 });
+
+export const CreateProblemSchema = z.object({
+	title: z.string().min(1, 'Title is required'),
+	problemSlug: z.string().min(1, 'Problem slug is required'),
+	difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
+	problemType: z.array(
+		z.enum(['Array', 'String', 'HashTable', 'LinkedList'])
+	),
+	hidden: z.boolean().default(false),
+});
