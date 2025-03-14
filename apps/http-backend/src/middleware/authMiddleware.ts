@@ -2,6 +2,10 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { handleError } from '../utils/errorHandler';
 
+interface JwtPayload {
+	id: string;
+}
+
 interface AuthenticatedRequest extends Request {
 	userId?: string;
 }
@@ -16,12 +20,38 @@ export const authMiddleware = (
 		return handleError(res, 401, 'Unauthorized');
 	}
 
-	const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-
-	if (typeof decoded !== 'string' && 'id' in decoded) {
+	try {
+		const decoded = jwt.verify(
+			token,
+			process.env.JWT_SECRET as string
+		) as JwtPayload;
 		req.userId = decoded.id;
-	} else {
-		return handleError(res, 401, 'Unauthorized');
+		return next();
+	} catch (error) {
+		res.clearCookie('authToken');
+		return handleError(res, 401, 'Invalid token');
 	}
-	next();
+};
+
+export const isLoggedIn = (
+	req: AuthenticatedRequest,
+	res: Response,
+	next: NextFunction
+) => {
+	const token = req.cookies.authToken;
+	if (!token) {
+		return next();
+	}
+
+	try {
+		const decoded = jwt.verify(
+			token,
+			process.env.JWT_SECRET as string
+		) as JwtPayload;
+		req.userId = decoded.id;
+		return next();
+	} catch (error) {
+		res.clearCookie('authToken');
+		return next();
+	}
 };

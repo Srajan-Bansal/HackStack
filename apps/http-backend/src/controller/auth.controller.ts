@@ -22,61 +22,118 @@ const sendCookie = (res: Response, token: string) => {
 };
 
 export const signup = async (req: Request, res: Response) => {
-	const parsedSchema = UserSignupSchema.safeParse(req.body);
+	try {
+		const parsedSchema = UserSignupSchema.safeParse(req.body);
 
-	if (!parsedSchema.success) {
-		return handleError(res, 400, 'Invalid signup data');
+		if (!parsedSchema.success) {
+			return handleError(res, 400, 'Invalid signup data');
+		}
+
+		const { email, password, name } = parsedSchema.data;
+
+		const existingUser = await prisma.user.findUnique({
+			where: { email: email },
+		});
+
+		if (existingUser) {
+			return handleError(res, 400, 'User already exists');
+		}
+
+		const hashPassword = await bcrypt.hash(password, 12);
+
+		const newUser = await prisma.user.create({
+			data: {
+				email,
+				password: hashPassword,
+				name,
+			},
+			select: {
+				id: true,
+				email: true,
+				name: true,
+			},
+		});
+
+		const token = generateToken(newUser.id);
+		sendCookie(res, token);
+
+		res.status(200).json({ user: newUser });
+	} catch (error) {
+		return handleError(res, 500, 'Failed to signup');
 	}
-
-	const { email, password } = parsedSchema.data;
-
-	const hashPassword = await bcrypt.hash(password, 12);
-
-	const newUser = await prisma.user.upsert({
-		where: { email: email },
-		create: {
-			email: email,
-			password: hashPassword,
-		},
-		update: {},
-	});
-
-	const token = generateToken(newUser.id);
-	sendCookie(res, token);
-
-	res.status(200).json({ id: newUser.id });
 };
 
 export const login = async (req: Request, res: Response) => {
-	const parsedSchema = UserLoginSchema.safeParse(req.body);
+	try {
+		const parsedSchema = UserLoginSchema.safeParse(req.body);
 
-	if (!parsedSchema.success) {
-		return handleError(res, 400, 'Invalid login data');
+		if (!parsedSchema.success) {
+			return handleError(res, 400, 'Invalid login data');
+		}
+
+		const { email, password } = parsedSchema.data;
+
+		const user = await prisma.user.findUnique({
+			where: { email: email },
+		});
+
+		if (!user) {
+			return handleError(res, 401, 'Invalid email or password');
+		}
+
+		const isPasswordCorrect = await bcrypt.compare(password, user.password);
+
+		if (!isPasswordCorrect) {
+			return handleError(res, 401, 'Invalid email or password');
+		}
+
+		const token = generateToken(user.id);
+		sendCookie(res, token);
+
+		res.status(200).json({ user: user });
+	} catch (error) {
+		return handleError(res, 500, 'Failed to login');
 	}
-
-	const { email, password } = parsedSchema.data;
-
-	const user = await prisma.user.findUnique({
-		where: { email: email },
-	});
-
-	if (!user) {
-		return handleError(res, 401, 'Invalid email or password');
-	}
-
-	const isPasswordCorrect = await bcrypt.compare(password, user.password);
-
-	if (!isPasswordCorrect) {
-		return handleError(res, 401, 'Invalid email or password');
-	}
-
-	const token = generateToken(user.id);
-	sendCookie(res, token);
-
-	res.status(200).json({ id: user.id });
 };
 
 export const logout = async (req: Request, res: Response) => {
-	res.clearCookie('authToken');
-	res.status(200).json({ message: 'Logged out' });
+	try {
+		res.clearCookie('authToken', {
+			httpOnly: true,
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+			secure: process.env.NODE_ENV === 'production',
+		});
+		res.status(200).json({ message: 'Logged out' });
+	} catch (error) {
+		res.status(500).json({ message: 'Failed to logout' });
+	}
+};
+
+export const getUser = async (
+	req: Request & { userId?: string },
+	res: Response
+) => {
+	try {
+		const userId = req.userId as string;
+		if (!userId) {
+			return handleError(res, 400, 'Not Authenticated');
+		}
+
+		const user = await prisma.user.findUnique({
+			where: { id: userId },
+			select: {
+				id: true,
+				email: true,
+				name: true,
+			},
+		});
+
+		if (!user) {
+			return handleError(res, 404, 'User not found');
+		}
+
+		res.status(200).json({ user });
+	} catch (error) {
+		return handleError(res, 500, 'Failed to get user');
+	}
 };

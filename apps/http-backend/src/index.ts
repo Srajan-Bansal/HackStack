@@ -5,6 +5,7 @@ import { errorMiddleware } from './middleware/errorMiddleware';
 import authRouter from './routes/auth.route';
 import problemRouter from './routes/problem.route';
 import submissionRouter from './routes/submission.route';
+import userRouter from './routes/user.route';
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.get('/', (req, res) => {
 app.use('/api/v1', authRouter);
 app.use('/api/v1', problemRouter);
 app.use('/api/v1', submissionRouter);
+app.use('/api/v1', userRouter);
 
 const PORT = process.env.PORT;
 const server = app.listen(PORT, () => {
