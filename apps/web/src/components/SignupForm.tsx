@@ -7,19 +7,20 @@ import { Input } from '@repo/ui/components/Input';
 import { Label } from '@repo/ui/components/Label';
 import { toast } from '@repo/ui/components/sonner';
 
-export function LoginForm({
+export function SignupForm({
 	className,
 	...props
 }: React.ComponentPropsWithoutRef<'form'>) {
+	const [name, setName] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
-	const { login, error, loading } = useAuth();
+	const { signup, error, loading } = useAuth();
 	const navigate = useNavigate();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		try {
-			await login(email, password);
+			await signup(email, password, name);
 			navigate('/problemset');
 		} catch {
 			toast.error(error);
@@ -33,13 +34,24 @@ export function LoginForm({
 			{...props}
 		>
 			<div className='flex flex-col items-center gap-2 text-center'>
-				<h1 className='text-2xl font-bold'>Login to your account</h1>
+				<h1 className='text-2xl font-bold'>Signup to your account</h1>
 				<p className='text-balance text-sm text-muted-foreground'>
-					Enter your email below to login to your account
+					Enter your email below to Signup to your account
 				</p>
 			</div>
 
 			<div className='grid gap-6'>
+				<div className='grid gap-2'>
+					<Label htmlFor='name'>Name</Label>
+					<Input
+						id='name'
+						type='text'
+						placeholder='John Doe'
+						value={name}
+						onChange={(e) => setName(e.target.value)}
+						required
+					/>
+				</div>
 				<div className='grid gap-2'>
 					<Label htmlFor='email'>Email</Label>
 					<Input
@@ -73,7 +85,7 @@ export function LoginForm({
 					type='submit'
 					className='w-full'
 				>
-					{loading ? 'Logging in...' : 'Login'}
+					{loading ? 'Signing up...' : 'Signup'}
 				</Button>
 				{/* <div className='relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t after:border-border'>
 					<span className='relative z-10 bg-background px-2 text-muted-foreground'>
@@ -97,12 +109,12 @@ export function LoginForm({
 				</Button> */}
 			</div>
 			<div className='text-center text-sm'>
-				Don&apos;t have an account?{' '}
+				Already have an account?{' '}
 				<Link
-					to='/signup'
+					to='/login'
 					className='underline underline-offset-4'
 				>
-					Sign up
+					Login
 				</Link>
 			</div>
 		</form>

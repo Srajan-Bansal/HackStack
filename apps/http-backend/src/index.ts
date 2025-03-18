@@ -6,10 +6,12 @@ import authRouter from './routes/auth.route';
 import problemRouter from './routes/problem.route';
 import submissionRouter from './routes/submission.route';
 import userRouter from './routes/user.route';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
+app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(errorMiddleware);
 app.use(express.json());
