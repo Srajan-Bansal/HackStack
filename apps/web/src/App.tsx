@@ -47,6 +47,10 @@ const AppRoutes = () => {
 				/>
 			</Route>
 			<Route
+				path='/'
+				element={<Navigate to='/problemset' />}
+			/>
+			<Route
 				path='/problemset'
 				element={<Index />}
 			/>

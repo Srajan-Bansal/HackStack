@@ -110,7 +110,8 @@ export const createProblem = async (req: Request, res: Response) => {
 		return handleError(res, 400, 'Invalid request body');
 	}
 
-	const { title, problemSlug, difficulty, hidden, problemType } = parsedBody;
+	const { id, title, problemSlug, difficulty, hidden, problemType } =
+		parsedBody;
 
 	try {
 		const problemMarkdown = await getProblemMarkdown(problemSlug);
@@ -118,6 +119,7 @@ export const createProblem = async (req: Request, res: Response) => {
 		await prisma.$transaction(async (tx) => {
 			const problem = await tx.problem.create({
 				data: {
+					id,
 					title,
 					slug: problemSlug,
 					hidden,

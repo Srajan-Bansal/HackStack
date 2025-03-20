@@ -19,7 +19,7 @@ model User {
 }
 
 model Problem {
-  id          Int           @id @default(autoincrement())
+  id          Int           @id
   title       String
   description String
   slug        String        @unique

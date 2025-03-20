@@ -49,6 +49,7 @@ export const SubmissionCallback = z.object({
 });
 
 export const CreateProblemSchema = z.object({
+	id: z.number(),
 	title: z.string().min(1, 'Title is required'),
 	problemSlug: z.string().min(1, 'Problem slug is required'),
 	difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
