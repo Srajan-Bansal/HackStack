@@ -90,7 +90,9 @@ export const login = async (req: Request, res: Response) => {
 		const token = generateToken(user.id);
 		sendCookie(res, token);
 
-		res.status(200).json({ user: user });
+		const { password: _, ...filteredUser } = user;
+
+		res.status(200).json({ user: filteredUser });
 	} catch (error) {
 		return handleError(res, 500, 'Failed to login');
 	}

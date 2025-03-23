@@ -8,14 +8,15 @@ datasource db {
 }
 
 model User {
-  id         String       @id @default(uuid())
-  email      String       @unique
-  name       String?
-  provider   String?
-  password   String
-  role       UserRole     @default(USER)
-  Submission Submission[]
-  createdAt  DateTime     @default(now())
+  id          String        @id @default(uuid())
+  email       String        @unique
+  name        String?
+  provider    String?
+  password    String
+  role        UserRole      @default(USER)
+  Submission  Submission[]
+  UserProblem UserProblem[]
+  createdAt   DateTime      @default(now())
 }
 
 model Problem {
@@ -28,10 +29,24 @@ model Problem {
   type        ProblemType[]
   Submission  Submission[]
   DefaultCode DefaultCode[]
+  UserProblem UserProblem[]
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
   @@index([slug])
+}
+
+model UserProblem {
+  id        String        @id @default(uuid())
+  status    ProblemStatus @default(NOT_ATTEMPTED)
+  user      User          @relation(fields: [userId], references: [id])
+  userId    String
+  problem   Problem       @relation(fields: [problemId], references: [id])
+  problemId Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@unique([userId, problemId])
 }
 
 model DefaultCode {
@@ -81,13 +96,15 @@ model Submission {
 }
 
 model Language {
-  id          Int           @id @default(autoincrement())
-  name        String
-  judgeOId    Int
-  DefaultCode DefaultCode[]
-  Submission  Submission[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id            Int           @id @default(autoincrement())
+  name          String
+  judge0Id      Int
+  fileExtension String
+  monaco        String
+  DefaultCode   DefaultCode[]
+  Submission    Submission[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 }
 
 enum TestCaseStatus {
@@ -128,4 +145,10 @@ enum ProblemType {
 enum UserRole {
   ADMIN
   USER
+}
+
+enum ProblemStatus {
+  NOT_ATTEMPTED
+  ATTEMPTED
+  SOLVED
 }

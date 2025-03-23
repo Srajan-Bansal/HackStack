@@ -5,7 +5,6 @@ import { cn } from '@repo/ui/lib/utils';
 import { Button } from '@repo/ui/components/Button';
 import { Input } from '@repo/ui/components/Input';
 import { Label } from '@repo/ui/components/Label';
-import { toast } from '@repo/ui/components/sonner';
 
 export function LoginForm({
 	className,
@@ -18,11 +17,9 @@ export function LoginForm({
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
-		try {
-			await login(email, password);
+		await login(email, password);
+		if (!error) {
 			navigate('/problemset');
-		} catch {
-			toast.error(error);
 		}
 	};
 
@@ -72,6 +69,7 @@ export function LoginForm({
 				<Button
 					type='submit'
 					className='w-full'
+					disabled={loading}
 				>
 					{loading ? 'Logging in...' : 'Login'}
 				</Button>

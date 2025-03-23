@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { userLogin, userSignup, userLogout } from './../lib/api';
+import { toast } from '@repo/ui/components/sonner';
 
 interface User {
 	id: string;
@@ -35,6 +36,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				setIsAuthenticated(true);
 			} catch {
 				localStorage.removeItem('user');
+				toast.error('Invalid user data');
 				setIsAuthenticated(false);
 			}
 		} else {
@@ -55,8 +57,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				setUser(response.user);
 				setIsAuthenticated(true);
 			}
-		} catch {
-			setError('Invalid credentials');
+		} catch (err: any) {
+			const errorMessage =
+				err?.response?.data?.message || 'Something went wrong';
+			setError(errorMessage);
+			toast.error(errorMessage);
 			setIsAuthenticated(false);
 		} finally {
 			setLoading(false);
@@ -75,8 +80,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 				setUser(response.user);
 				setIsAuthenticated(true);
 			}
-		} catch {
-			setError('Signup failed');
+		} catch (err: any) {
+			const errorMessage =
+				err?.response?.data?.message || 'Something went wrong';
+			setError(errorMessage);
+			toast.error(errorMessage);
 			setIsAuthenticated(false);
 		} finally {
 			setLoading(false);
@@ -100,6 +108,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			setUser(null);
 			setIsAuthenticated(false);
 			setError('Logout error');
+			toast.error('Logout error');
 		} finally {
 			setLoading(false);
 		}

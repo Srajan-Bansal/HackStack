@@ -2,7 +2,7 @@ import fs from 'fs';
 
 interface Problem {
 	slug: string;
-	fullBoilerPlate: string;
+	// fullBoilerPlate: string;
 	inputs: string[];
 	outputs: string[];
 }
@@ -13,17 +13,17 @@ export const getProblemCode = async (
 	slug: string,
 	fileExtension: string
 ): Promise<Problem> => {
-	const fullBoilerPlate = await getFullBoilerplate({
-		slug,
-		fileExtension,
-	});
+	// const fullBoilerPlate = await getFullBoilerplate({
+	// 	slug,
+	// 	fileExtension,
+	// });
 
 	const inputs = await getProblemInputs(slug);
 	const outputs = await getProblemOutputs(slug);
 
 	return {
 		slug: slug,
-		fullBoilerPlate,
+		// fullBoilerPlate,
 		inputs,
 		outputs,
 	};

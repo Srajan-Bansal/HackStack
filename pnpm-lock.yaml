@@ -270,6 +270,9 @@ importers:
         specifier: ^6.2.1
         version: 6.2.1(prisma@6.2.1)
     devDependencies:
+      '@repo/language':
+        specifier: workspace:*
+        version: link:../common/language
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config

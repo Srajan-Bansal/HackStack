@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import morgan from 'morgan';
-import prisma, { SubmissionStatus } from '@repo/db/client';
+import prisma, { SubmissionStatus, ProblemStatus } from '@repo/db/client';
 import { SubmissionCallback } from '@repo/common-zod/types';
 import { outMapping } from './outputMapping';
 
@@ -47,7 +47,7 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 
 		if (!pendingTestCases) {
 			const accepted = !failedTestCases;
-			await prisma.submission.update({
+			const submission = await prisma.submission.update({
 				where: { id: testCase.submissionId },
 				data: {
 					status: accepted
@@ -60,7 +60,66 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 						...allTestCases.map((tc) => tc.memory ?? 0)
 					),
 				},
+				select: {
+					userId: true,
+					problemId: true,
+					status: true,
+				},
 			});
+
+			if (submission.userId && submission.problemId) {
+				const userProblem = await prisma.userProblem.findUnique({
+					where: {
+						userId_problemId: {
+							userId: submission.userId,
+							problemId: submission.problemId,
+						},
+					},
+				});
+
+				if (userProblem) {
+					if (submission.status === SubmissionStatus.SUCCESS) {
+						await prisma.userProblem.update({
+							where: {
+								userId_problemId: {
+									userId: submission.userId,
+									problemId: submission.problemId,
+								},
+							},
+							data: {
+								status: ProblemStatus.SOLVED,
+								updatedAt: new Date(),
+							},
+						});
+					} else if (
+						userProblem.status === ProblemStatus.NOT_ATTEMPTED
+					) {
+						await prisma.userProblem.update({
+							where: {
+								userId_problemId: {
+									userId: submission.userId,
+									problemId: submission.problemId,
+								},
+							},
+							data: {
+								status: ProblemStatus.ATTEMPTED,
+								updatedAt: new Date(),
+							},
+						});
+					}
+				} else {
+					await prisma.userProblem.create({
+						data: {
+							userId: submission.userId,
+							problemId: submission.problemId,
+							status:
+								submission.status === SubmissionStatus.SUCCESS
+									? ProblemStatus.SOLVED
+									: ProblemStatus.ATTEMPTED,
+						},
+					});
+				}
+			}
 		}
 
 		res.status(200).json({ message: 'Test case updated successfully' });

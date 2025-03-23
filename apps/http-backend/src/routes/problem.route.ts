@@ -6,10 +6,11 @@ import {
 	getPartialBoilerplateCodeByLanguageId,
 	createProblem,
 } from '../controller/problem.controller';
+import { isLoggedIn } from '../middleware/authMiddleware';
 
 const router: Router = Router();
 
-router.get('/problemset', getProblems);
+router.get('/problemset', isLoggedIn, getProblems);
 router.get('/problem/:problemSlug', getProblem);
 router.get(
 	'/problem/:problemSlug/getBoilerplateCode',

@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '@repo/db/client';
+import prisma, { ProblemStatus, DefaultCodeType } from '@repo/db/client';
 import axios from 'axios';
 import { SubmissionInputSchema } from '@repo/common-zod/types';
 import { handleError } from '../utils/errorHandler';
@@ -9,7 +9,14 @@ import { getProblemCode } from '../utils/getProblemCode';
 const JUDGE_API_URL = process.env.JUDGE_API_URL;
 const JUDGE0_CALLBACK_URL = process.env.JUDGE0_CALLBACK_URL;
 
-export const createBatchSubmission = async (req: Request, res: Response) => {
+interface SubmissionRequest extends Request {
+	userId?: string;
+}
+
+export const createBatchSubmission = async (
+	req: SubmissionRequest,
+	res: Response
+) => {
 	try {
 		const parsedBody = SubmissionInputSchema.parse(req.body);
 		if (!parsedBody) {
@@ -20,8 +27,23 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 
 		const dbProblem = await prisma.problem.findUnique({
 			where: { slug: problemSlug },
-			select: { id: true, slug: true },
+			select: {
+				id: true,
+				slug: true,
+				DefaultCode: {
+					where: {
+						languageId:
+							LanguageMapping[parsedBody.languageId]?.internal ??
+							0,
+						DefaultCodeType: DefaultCodeType.FULLBOILERPLATECODE,
+					},
+					select: {
+						code: true,
+					},
+				},
+			},
 		});
+
 		if (!dbProblem) {
 			return handleError(res, 404, 'Problem not found');
 		}
@@ -30,20 +52,54 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			problemSlug,
 			parsedBody.languageId
 		);
-		problem.fullBoilerPlate = problem.fullBoilerPlate.replace(
+
+		const fullBoilerPlate = dbProblem.DefaultCode[0]?.code;
+
+		if (!fullBoilerPlate) {
+			return handleError(
+				res,
+				404,
+				'Full boilerplate not found in database'
+			);
+		}
+
+		const fullCodeWithUserCode = fullBoilerPlate.replace(
 			'##USER_CODE_HERE##',
 			parsedBody.code
 		);
 
 		const problemId = dbProblem.id;
+		const userId = req.userId;
+
+		if (userId) {
+			const UserProblem = await prisma.userProblem.findUnique({
+				where: {
+					userId_problemId: {
+						userId: userId,
+						problemId: problemId,
+					},
+				},
+			});
+
+			if (!UserProblem) {
+				await prisma.userProblem.create({
+					data: {
+						userId: userId,
+						problemId: problemId,
+						status: ProblemStatus.NOT_ATTEMPTED,
+					},
+				});
+			}
+		}
+
 		const submission = await prisma.submission.create({
 			data: {
-				// userId: req.user.id,
+				userId: userId,
 				problemId: problemId,
 				languageId:
 					LanguageMapping[parsedBody.languageId]?.internal ?? 0,
 				code: parsedBody.code,
-				fullCode: problem.fullBoilerPlate,
+				fullCode: fullCodeWithUserCode,
 				status: 'PENDING',
 			},
 		});
@@ -55,7 +111,7 @@ export const createBatchSubmission = async (req: Request, res: Response) => {
 			{
 				submissions: problem.inputs.map((input, index) => ({
 					language_id: language_id,
-					source_code: problem.fullBoilerPlate,
+					source_code: fullCodeWithUserCode,
 					stdin: input,
 					expected_output: problem.outputs[index],
 					callback_url: JUDGE0_CALLBACK_URL,

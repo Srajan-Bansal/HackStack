@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import prisma from '@repo/db/client';
+import prisma, { ProblemStatus } from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
 import { getProblemMarkdown } from '../utils/getProblemMarkdown';
 import {
@@ -10,23 +10,63 @@ import { LanguageMapping } from '@repo/language/LanguageMapping';
 import { CreateProblemSchema } from '@repo/common-zod/types';
 import { DefaultCodeType } from '@repo/db/client';
 
-export const getProblems = async (req: Request, res: Response) => {
+interface ProblemsRequest extends Request {
+	userId?: string;
+}
+
+interface Problems {
+	id: number;
+	title: string;
+	difficulty: string;
+	slug: string;
+	status?: ProblemStatus;
+}
+
+export const getProblems = async (req: ProblemsRequest, res: Response) => {
 	const skip = parseInt(req.query.skip as string) || 0;
 	const take = parseInt(req.query.take as string) || 50;
 
-	const problems = await prisma.problem.findMany({
-		skip: skip,
-		take: take,
-		where: { hidden: false },
-		select: {
-			id: true,
-			title: true,
-			difficulty: true,
-			slug: true,
-		},
-	});
+	let problems: Problems[] = [];
+	if (!req.userId) {
+		problems = await prisma.problem.findMany({
+			skip: skip,
+			take: take,
+			where: { hidden: false },
+			select: {
+				id: true,
+				title: true,
+				difficulty: true,
+				slug: true,
+			},
+		});
+	} else if (req.userId) {
+		const problemsWithStatus = await prisma.problem.findMany({
+			skip: skip,
+			take: take,
+			where: { hidden: false },
+			select: {
+				id: true,
+				title: true,
+				difficulty: true,
+				slug: true,
+				UserProblem: {
+					where: { userId: req.userId },
+					select: { status: true },
+				},
+			},
+		});
 
-	if (!problems) {
+		problems = problemsWithStatus.map((problem) => ({
+			id: problem.id,
+			title: problem.title,
+			difficulty: problem.difficulty,
+			slug: problem.slug,
+			status:
+				problem.UserProblem[0]?.status || ProblemStatus.NOT_ATTEMPTED,
+		}));
+	}
+
+	if (!problems.length) {
 		return handleError(res, 404, 'No problems found');
 	}
 
@@ -110,71 +150,74 @@ export const createProblem = async (req: Request, res: Response) => {
 		return handleError(res, 400, 'Invalid request body');
 	}
 
-	const { id, title, problemSlug, difficulty, hidden, problemType } =
-		parsedBody;
-
 	try {
-		const problemMarkdown = await getProblemMarkdown(problemSlug);
-
 		await prisma.$transaction(async (tx) => {
-			const problem = await tx.problem.create({
-				data: {
+			for (const problemData of parsedBody) {
+				const {
 					id,
 					title,
-					slug: problemSlug,
-					hidden,
+					problemSlug,
 					difficulty,
-					type: { set: problemType },
-					description: problemMarkdown,
-				},
-			});
+					hidden,
+					problemType,
+				} = problemData;
 
-			const defaultCodeQueries = Object.entries(LanguageMapping).flatMap(
-				([, language]) => {
-					return [
-						(async () => {
-							const partialBoilerplate =
-								await getPartialBoilerplate({
-									slug: problemSlug,
-									fileExtension: language.fileExtension,
-								});
+				const problemMarkdown = await getProblemMarkdown(problemSlug);
 
-							return tx.defaultCode.create({
-								data: {
-									code: partialBoilerplate,
-									languageId: language.internal,
-									problemId: problem.id,
-									DefaultCodeType:
-										DefaultCodeType.PARTIALBOILERPLATECODE,
-								},
-							});
-						})(),
-						(async () => {
-							const fullBoilerplate = await getFullBoilerplate({
-								slug: problemSlug,
-								fileExtension: language.fileExtension,
-							});
+				const problem = await tx.problem.create({
+					data: {
+						id,
+						title,
+						slug: problemSlug,
+						hidden,
+						difficulty,
+						type: { set: problemType },
+						description: problemMarkdown,
+					},
+				});
 
-							return tx.defaultCode.create({
-								data: {
-									code: fullBoilerplate,
-									languageId: language.internal,
-									problemId: problem.id,
-									DefaultCodeType:
-										DefaultCodeType.FULLBOILERPLATECODE,
-								},
-							});
-						})(),
-					];
-				}
-			);
+				const defaultCodeQueries = Object.entries(
+					LanguageMapping
+				).flatMap(([, language]) => [
+					(async () => {
+						const partialBoilerplate = await getPartialBoilerplate({
+							slug: problemSlug,
+							fileExtension: language.fileExtension,
+						});
+						return tx.defaultCode.create({
+							data: {
+								code: partialBoilerplate,
+								languageId: language.internal,
+								problemId: problem.id,
+								DefaultCodeType:
+									DefaultCodeType.PARTIALBOILERPLATECODE,
+							},
+						});
+					})(),
+					(async () => {
+						const fullBoilerplate = await getFullBoilerplate({
+							slug: problemSlug,
+							fileExtension: language.fileExtension,
+						});
+						return tx.defaultCode.create({
+							data: {
+								code: fullBoilerplate,
+								languageId: language.internal,
+								problemId: problem.id,
+								DefaultCodeType:
+									DefaultCodeType.FULLBOILERPLATECODE,
+							},
+						});
+					})(),
+				]);
 
-			await Promise.all(defaultCodeQueries);
+				await Promise.all(defaultCodeQueries);
+			}
 		});
 
-		res.status(200).json({ message: 'Problem created successfully' });
+		res.status(200).json({ message: 'All problems created successfully' });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ message: 'Failed to create problem', error });
+		res.status(500).json({ message: 'Failed to create problems', error });
 	}
 };

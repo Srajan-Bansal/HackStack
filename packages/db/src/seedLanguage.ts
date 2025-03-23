@@ -1,32 +1,33 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '.';
+import { LanguageMapping } from '@repo/language/LanguageMapping';
 
 async function main() {
-	const languages = [
-		{ id: 1, name: 'Java', judgeOId: 62 },
-		{ id: 2, name: 'JavaScript', judgeOId: 63 },
-	];
+	for (const key in LanguageMapping) {
+		const lang = LanguageMapping[key];
+		if (!lang) return;
 
-	for (const lang of languages) {
 		await prisma.language.upsert({
-			where: { id: lang.id },
-			update: {},
+			where: { id: lang.internal },
+			update: {
+				fileExtension: lang.fileExtension,
+				monaco: lang.monaco,
+			},
 			create: {
-				id: lang.id,
+				id: lang.internal,
 				name: lang.name,
-				judgeOId: lang.judgeOId,
+				judge0Id: lang.judge0,
+				fileExtension: lang.fileExtension,
+				monaco: lang.monaco,
 			},
 		});
 	}
 
-	console.log('Languages populated successfully!');
+	console.log('Languages populated from LanguageMapping!');
 }
 
 main()
 	.catch((e) => {
 		console.error(e);
-		// process.exit(1);
 	})
 	.finally(async () => {
 		await prisma.$disconnect();

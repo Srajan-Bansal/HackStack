@@ -7,5 +7,6 @@ export {
 	SubmissionStatus,
 	DefaultCodeType,
 	Difficulty,
+	ProblemStatus,
 } from '@prisma/client';
 export default prisma;
