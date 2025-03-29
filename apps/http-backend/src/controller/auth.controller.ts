@@ -13,7 +13,7 @@ const generateToken = (id: string): string => {
 
 const sendCookie = (res: Response, token: string) => {
 	const cookieOptions = {
-		maxAge: parseInt(process.env.JWT_COOKIE_EXPIRES_IN as string),
+		maxAge: 7 * 24 * 60 * 60 * 1000, // Default 7 days
 		httpOnly: true,
 		sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
 		secure: process.env.NODE_ENV === 'production',

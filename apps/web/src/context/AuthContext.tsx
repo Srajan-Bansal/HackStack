@@ -19,7 +19,17 @@ interface AuthContextType {
 	clearError: () => void;
 }
 
+const EXPIRY_TIME = Number(import.meta.env.VITE_LOCALSTORAGE_EXPIRES_IN);
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const saveUserToLocalStorage = (user: User) => {
+	const userWithExpiry = {
+		...user,
+		expiry: new Date().getTime() + EXPIRY_TIME,
+	};
+	localStorage.setItem('user', JSON.stringify(userWithExpiry));
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 	const [user, setUser] = useState<User | null>(null);
@@ -29,11 +39,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
 	useEffect(() => {
 		const storedUser = localStorage.getItem('user');
+		const now = new Date().getTime();
 		if (storedUser) {
 			try {
 				const parsedUser = JSON.parse(storedUser);
-				setUser(parsedUser);
-				setIsAuthenticated(true);
+				if (parsedUser.expiry && now < parsedUser.expiry) {
+					setUser(parsedUser);
+					setIsAuthenticated(true);
+				} else {
+					localStorage.removeItem('user');
+					setIsAuthenticated(false);
+				}
 			} catch {
 				localStorage.removeItem('user');
 				toast.error('Invalid user data');
@@ -53,7 +69,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			const response = await userLogin(email, password);
 			console.log(response);
 			if (response && response.user) {
-				localStorage.setItem('user', JSON.stringify(response.user));
+				saveUserToLocalStorage(response.user);
 				setUser(response.user);
 				setIsAuthenticated(true);
 			}
@@ -76,7 +92,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			const response = await userSignup(email, password, name);
 
 			if (response && response.user) {
-				localStorage.setItem('user', JSON.stringify(response.user));
+				saveUserToLocalStorage(response.user);
 				setUser(response.user);
 				setIsAuthenticated(true);
 			}
