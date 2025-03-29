@@ -5,7 +5,8 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc -b",
-		"generate": "pnpm build && node dist/index.js"
+		"generate": "pnpm build && node dist/index.js",
+		"generate-all": "pnpm build && node dist/generateAllProblems.js"
 	},
 	"keywords": [],
 	"author": "",
