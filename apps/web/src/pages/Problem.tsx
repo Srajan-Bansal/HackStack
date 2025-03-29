@@ -1,7 +1,5 @@
 import { useParams } from 'react-router-dom';
 import Header from './../components/Header';
-import Markdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useEffect, useState } from 'react';
 import { getProblem, getBoilerplateCode } from '../lib/api';
 import ProblemSubmitBar from '../components/ProblemSubmitBar';
@@ -12,12 +10,12 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from '@repo/ui/components/Resizable';
+import ProblemDesp from '../components/ProblemDesp';
 
 const Problem = () => {
 	const { slug = '' } = useParams<{ slug: string }>();
 	const [problem, setProblem] = useState<string | null>(null);
 	const [code, setCode] = useState<string>('');
-	// @ts-ignore
 	const [isLoading, setIsLoading] = useState(false);
 	const [selectedLanguage, setSelectedLanguage] = useState(() => {
 		return (
@@ -75,11 +73,12 @@ const Problem = () => {
 						maxSize={80}
 						defaultSize={50}
 					>
-						<div className='container py-8 flex gap-8 flex-col w-full min-w-0'>
-							<Markdown rehypePlugins={[remarkGfm]}>
-								{problem || 'No description available.'}
-							</Markdown>
-						</div>
+						<ProblemDesp
+							problem={problem}
+							isLoading={isLoading}
+							setIsLoading={setIsLoading}
+							problemSlug={slug}
+						/>
 					</ResizablePanel>
 					<ResizableHandle
 						withHandle

@@ -101,3 +101,13 @@ export const userLogout = async () => {
 	});
 	return response.data;
 };
+
+export const getUserSubmmissions = async (problemSlug: string) => {
+	const response = await axios.get(
+		`${BACKEND_URL}/api/v1/problem/${problemSlug}/submissions`,
+		{
+			withCredentials: true,
+		}
+	);
+	return response.data;
+};
