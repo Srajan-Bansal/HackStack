@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useRef } from 'react';
 import CodeEditor from '../components/@monaco-editor/CodeEditor';
 import { Button } from '@repo/ui/components/Button';
@@ -22,10 +20,22 @@ const ProblemSubmitBar = ({
 	slug: string;
 	code: string;
 	setCode: React.Dispatch<React.SetStateAction<string>>;
-	selectedLanguage: any;
-	setSelectedLanguage: React.Dispatch<React.SetStateAction<any>>;
+	selectedLanguage: {
+		value: string;
+		label: string;
+		monaco: string;
+		judge0: number;
+	} | null;
+	setSelectedLanguage: React.Dispatch<
+		React.SetStateAction<{
+			value: string;
+			label: string;
+			monaco: string;
+			judge0: number;
+		} | null>
+	>;
 }) => {
-	const [tokens, setTokens] = useState<string[]>([]);
+	// Removed unused tokens state
 	const [status, setStatus] = useState<SubmitStatus>();
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const POLL_INTERVAL = 5000;
@@ -45,7 +55,7 @@ const ProblemSubmitBar = ({
 				(sub: { token: string }) => sub.token
 			);
 			console.log('Tokens:', newTokens);
-			setTokens(newTokens);
+			// Removed setTokens as tokens state is no longer used
 			pollForResult(newTokens, MAX_RETRIES);
 		} else {
 			setStatus(SubmitStatus.ACTIVE);
@@ -102,7 +112,7 @@ const ProblemSubmitBar = ({
 					return;
 				}
 
-				setTokens(pendingTokens);
+				// Removed setTokens as tokens state is no longer used
 				currentTokens = pendingTokens;
 			}
 
