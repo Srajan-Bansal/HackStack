@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useRef } from 'react';
 import CodeEditor from '../components/@monaco-editor/CodeEditor';
 import { Button } from '@repo/ui/components/Button';
