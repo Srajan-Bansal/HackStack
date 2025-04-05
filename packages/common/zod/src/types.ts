@@ -16,13 +16,16 @@ export const SubmissionInputSchema = z.object({
 	languageId: z.enum(['java', 'js']),
 });
 
-const DifficultySchema = z.enum(['easy', 'medium', 'hard']);
+const DifficultySchema = z.enum(['EASY', 'MEDIUM', 'HARD']);
 
 const ProblemTypeSchema = z.enum([
 	'Array',
 	'String',
 	'HashTable',
 	'LinkedList',
+	'Math',
+	'Stack',
+	'Sorting',
 ]);
 
 export const ProblemSchema = z.object({
@@ -53,10 +56,8 @@ export const CreateProblemSchema = z.array(
 		id: z.number(),
 		title: z.string().min(1, 'Title is required'),
 		problemSlug: z.string().min(1, 'Problem slug is required'),
-		difficulty: z.enum(['EASY', 'MEDIUM', 'HARD']),
-		problemType: z.array(
-			z.enum(['Array', 'String', 'HashTable', 'LinkedList'])
-		),
+		difficulty: DifficultySchema,
+		problemType: z.array(ProblemTypeSchema),
 		hidden: z.boolean().default(false),
 	})
 );
