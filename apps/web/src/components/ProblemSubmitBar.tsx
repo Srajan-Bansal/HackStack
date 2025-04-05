@@ -27,7 +27,7 @@ const ProblemSubmitBar = ({
 	const [status, setStatus] = useState<SubmitStatus>();
 	const intervalRef = useRef<NodeJS.Timeout | null>(null);
 	const POLL_INTERVAL = 5000;
-	const MAX_RETRIES = 4;
+	const MAX_RETRIES = 10;
 
 	async function handleSubmit() {
 		if (!slug || !code || !selectedLanguage) return;
@@ -42,7 +42,7 @@ const ProblemSubmitBar = ({
 			const newTokens = response.judge0response.map(
 				(sub: { token: string }) => sub.token
 			);
-			console.log('Tokens:', tokens);
+			console.log('Tokens:', newTokens);
 			setTokens(newTokens);
 			pollForResult(newTokens, MAX_RETRIES);
 		} else {
