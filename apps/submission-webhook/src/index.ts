@@ -13,13 +13,18 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 	try {
 		const parsedBody = SubmissionCallback.parse(req.body);
 		if (!parsedBody) {
-			res.status(400).json({ error: 'Invalid data' });
+			res.status(400).json({ error: 'Invalid request body' });
+		}
+
+		const mappedStatus = outMapping[parsedBody.status.description];
+		if (!mappedStatus) {
+			res.status(400).json({ error: 'Unknown Judge0 status' });
 		}
 
 		const testCase = await prisma.testCase.update({
 			where: { judge0TrackingId: parsedBody.token },
 			data: {
-				status: { set: outMapping[parsedBody.status.description] },
+				status: mappedStatus,
 				runtime: parseFloat(parsedBody.time),
 				memory: parsedBody.memory,
 			},
@@ -124,17 +129,18 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 
 		res.status(200).json({ message: 'Test case updated successfully' });
 	} catch (error) {
+		console.error('Error processing submission callback:', error);
 		res.status(500).json({
 			error: 'Internal Server Error',
-			details: error,
+			details: error instanceof Error ? error.message : String(error),
 		});
 	}
 });
 
-app.get('/', (req, res) => {
+app.get('/', (req: Request, res: Response) => {
 	res.send('Hello World!');
 });
 
 app.listen(5000, '0.0.0.0', () => {
-	console.log('Server is running on port 5000');
+	console.log(`Server is running on port 5000`);
 });
