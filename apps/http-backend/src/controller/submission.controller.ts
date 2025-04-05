@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
-import prisma, { ProblemStatus, DefaultCodeType } from '@repo/db/client';
+import prisma, {
+	ProblemStatus,
+	DefaultCodeType,
+	SubmissionStatus,
+	TestCaseStatus,
+} from '@repo/db/client';
 import axios from 'axios';
 import { SubmissionInputSchema } from '@repo/common-zod/types';
 import { handleError } from '../utils/errorHandler';
@@ -8,6 +13,7 @@ import { getProblemCode } from '../utils/getProblemCode';
 
 const JUDGE_API_URL = process.env.JUDGE_API_URL;
 const JUDGE0_CALLBACK_URL = process.env.JUDGE0_CALLBACK_URL;
+const CHUNK_SIZE = 20;
 
 interface SubmissionRequest extends Request {
 	userId?: string;
@@ -71,26 +77,24 @@ export const createBatchSubmission = async (
 		const problemId = dbProblem.id;
 		const userId = req.userId;
 
-		if (userId) {
-			const UserProblem = await prisma.userProblem.findUnique({
-				where: {
-					userId_problemId: {
-						userId: userId,
-						problemId: problemId,
-					},
-				},
-			});
-
-			if (!UserProblem) {
-				await prisma.userProblem.create({
-					data: {
-						userId: userId,
-						problemId: problemId,
-						status: ProblemStatus.NOT_ATTEMPTED,
-					},
-				});
-			}
+		if (!userId) {
+			return handleError(res, 400, 'User id is required');
 		}
+
+		await prisma.userProblem.upsert({
+			where: {
+				userId_problemId: {
+					userId,
+					problemId,
+				},
+			},
+			create: {
+				userId,
+				problemId,
+				status: ProblemStatus.ATTEMPTED,
+			},
+			update: {},
+		});
 
 		const submission = await prisma.submission.create({
 			data: {
@@ -100,41 +104,54 @@ export const createBatchSubmission = async (
 					LanguageMapping[parsedBody.languageId]?.internal ?? 0,
 				code: parsedBody.code,
 				fullCode: fullCodeWithUserCode,
-				status: 'PENDING',
+				status: SubmissionStatus.PENDING,
 			},
 		});
 
 		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
+		if (!language_id) {
+			return handleError(res, 400, 'Invalid language ID');
+		}
 
-		const judge0response = await axios.post(
-			`${JUDGE_API_URL}/submissions/batch/?base64_encoded=false`,
-			{
-				submissions: problem.inputs.map((input, index) => ({
-					language_id: language_id,
-					source_code: fullCodeWithUserCode,
-					stdin: input,
-					expected_output: problem.outputs[index],
-					callback_url: JUDGE0_CALLBACK_URL,
-				})),
-			}
-		);
+		const submissionsData = problem.inputs.map((input, index) => ({
+			language_id: language_id,
+			source_code: fullCodeWithUserCode,
+			stdin: input,
+			expected_output: problem.outputs[index],
+			callback_url: JUDGE0_CALLBACK_URL,
+		}));
+
+		const batchPromises = [];
+		for (let i = 0; i < submissionsData.length; i += CHUNK_SIZE) {
+			const chunk = submissionsData.slice(i, i + CHUNK_SIZE);
+			batchPromises.push(
+				axios.post(
+					`${JUDGE_API_URL}/submissions/batch/?base64_encoded=false`,
+					{ submissions: chunk }
+				)
+			);
+		}
+
+		const allResponses = await Promise.all(batchPromises);
+		const allJudgeResponses = allResponses.flatMap((res) => res.data);
 
 		await prisma.testCase.createMany({
-			data: problem.inputs.map((input, index) => ({
+			data: allJudgeResponses.map((resp, index) => ({
 				submissionId: submission.id,
-				status: 'PENDING',
-				input: input,
+				status: TestCaseStatus.PENDING,
+				input: problem.inputs[index] ?? '',
 				output: problem.outputs[index] ?? '',
 				index,
-				judge0TrackingId: judge0response.data[index].token,
+				judge0TrackingId: resp.token,
 			})),
 		});
 
 		res.status(200).json({
 			submissionId: submission.id,
-			judge0response: judge0response.data,
+			totalTestCases: problem.inputs.length,
 		});
 	} catch (error) {
+		console.log((error as Error).message);
 		return handleError(res, 500, (error as Error).message);
 	}
 };

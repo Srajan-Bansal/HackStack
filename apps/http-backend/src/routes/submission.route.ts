@@ -5,8 +5,11 @@ import {
 	checkSubmission,
 	getUserSubmissions,
 } from '../controller/submission.controller';
+import { authMiddleware } from '../middleware/authMiddleware';
 
 const router: Router = Router();
+
+router.use(authMiddleware);
 
 router.post('/createSubmission/:problemSlug', createBatchSubmission);
 router.post('/check', checkBatchSubmission);

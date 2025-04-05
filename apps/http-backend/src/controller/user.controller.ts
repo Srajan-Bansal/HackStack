@@ -41,6 +41,7 @@ export const getUserSubmissionsForProblem = async (
 				memory: true,
 				languageId: true,
 				createdAt: true,
+				code: true,
 			},
 			orderBy: { createdAt: 'desc' },
 			skip: skip,
