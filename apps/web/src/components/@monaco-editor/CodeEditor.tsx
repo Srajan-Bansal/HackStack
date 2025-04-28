@@ -17,7 +17,7 @@ const CodeEditor = ({
 	return (
 		<div className={cn('rounded-md border', className)}>
 			<Editor
-				height='60vh'
+				height='100vh'
 				language={language}
 				theme='vs-dark'
 				value={value}

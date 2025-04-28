@@ -44,7 +44,6 @@ export const submitSolution = async (
 		{ code, languageId },
 		{ withCredentials: true }
 	);
-	console.log(response.data);
 	return response.data;
 };
 

@@ -146,9 +146,17 @@ export const createBatchSubmission = async (
 			})),
 		});
 
+		await prisma.submission.update({
+			where: { id: submission.id },
+			data: {
+				judge0TrackingIds: allJudgeResponses.map((resp) => resp.token),
+			},
+		});
+
 		res.status(200).json({
 			submissionId: submission.id,
 			totalTestCases: problem.inputs.length,
+			judge0response: allJudgeResponses,
 		});
 	} catch (error) {
 		console.log((error as Error).message);
@@ -164,12 +172,23 @@ export const checkBatchSubmission = async (req: Request, res: Response) => {
 	}
 
 	try {
-		const tokenQuery = tokens.join(',');
-		const judge0response = await axios.get(
-			`${JUDGE_API_URL}/submissions/batch?tokens=${tokenQuery}&base64_encoded=false`
-		);
-		res.status(200).json(judge0response.data);
+		const results = [];
+		for (let i = 0; i < tokens.length; i += CHUNK_SIZE) {
+			const chunk = tokens.slice(i, i + CHUNK_SIZE);
+			const tokenQuery = chunk.join(',');
+
+			const judge0response = await axios.get(
+				`${JUDGE_API_URL}/submissions/batch?tokens=${tokenQuery}&base64_encoded=false`
+			);
+
+			results.push(...judge0response.data.submissions);
+		}
+
+		res.status(200).json({
+			submissions: results,
+		});
 	} catch (error) {
+		console.log(error);
 		return handleError(res, 500, (error as Error).message);
 	}
 };
