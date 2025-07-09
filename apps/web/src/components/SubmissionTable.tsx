@@ -33,21 +33,21 @@ const SubmissionTable = ({
 							<tr key={submission.id}>
 								<td className='px-6 py-4 text-sm'>
 									<span
-										className={`px-2 py-1 text-xs font-medium rounded-full ${submission.status === 'Accepted' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}
+										className={`px-2 py-1 text-xs font-medium rounded-full ${submission.status === 'SUCCESS' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}`}
 									>
 										{submission.status}
 									</span>
 								</td>
-								<td className='px-6 py-4 text-sm text-gray-700 dark:text-gray-300'>
-									{submission.runtime} ms
+								<td className='px-6 py-4 text-sm'>
+									{submission.runtime} s
 								</td>
-								<td className='px-6 py-4 text-sm text-gray-700 dark:text-gray-300'>
-									{submission.memory} MB
+								<td className='px-6 py-4 text-sm'>
+									{(submission.memory / 1024).toFixed(2)} MB
 								</td>
-								<td className='px-6 py-4 text-sm text-gray-700 dark:text-gray-300'>
+								<td className='px-6 py-4 text-sm'>
 									{submission.languageId}
 								</td>
-								<td className='px-6 py-4 text-sm text-gray-700 dark:text-gray-300'>
+								<td className='px-6 py-4 text-sm'>
 									{new Date(
 										submission.createdAt
 									).toLocaleString()}
