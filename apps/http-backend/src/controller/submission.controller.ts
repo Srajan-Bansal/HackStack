@@ -81,33 +81,6 @@ export const createBatchSubmission = async (
 			return handleError(res, 400, 'User id is required');
 		}
 
-		await prisma.userProblem.upsert({
-			where: {
-				userId_problemId: {
-					userId,
-					problemId,
-				},
-			},
-			create: {
-				userId,
-				problemId,
-				status: ProblemStatus.ATTEMPTED,
-			},
-			update: {},
-		});
-
-		const submission = await prisma.submission.create({
-			data: {
-				userId: userId,
-				problemId: problemId,
-				languageId:
-					LanguageMapping[parsedBody.languageId]?.internal ?? 0,
-				code: parsedBody.code,
-				fullCode: fullCodeWithUserCode,
-				status: SubmissionStatus.PENDING,
-			},
-		});
-
 		const language_id = LanguageMapping[parsedBody.languageId]?.judge0;
 		if (!language_id) {
 			return handleError(res, 400, 'Invalid language ID');
@@ -135,7 +108,35 @@ export const createBatchSubmission = async (
 		const allResponses = await Promise.all(batchPromises);
 		const allJudgeResponses = allResponses.flatMap((res) => res.data);
 
-		await prisma.testCase.createMany({
+		const submissionResult = await prisma.$transaction(async (tx) => {
+			await tx.userProblem.upsert({
+				where: {
+					userId_problemId: {
+						userId,
+						problemId,
+					},
+				},
+				create: {
+					userId,
+					problemId,
+					status: ProblemStatus.ATTEMPTED,
+				},
+				update: {},
+			});
+
+			const submission = await tx.submission.create({
+				data: {
+					userId,
+					problemId,
+					languageId:
+						LanguageMapping[parsedBody.languageId]?.internal ?? 0,
+					code: parsedBody.code,
+					fullCode: fullCodeWithUserCode,
+					status: SubmissionStatus.PENDING,
+				},
+			});
+
+			await tx.testCase.createMany({
 			data: allJudgeResponses.map((resp, index) => ({
 				submissionId: submission.id,
 				status: TestCaseStatus.PENDING,
@@ -146,15 +147,18 @@ export const createBatchSubmission = async (
 			})),
 		});
 
-		await prisma.submission.update({
+			await tx.submission.update({
 			where: { id: submission.id },
 			data: {
-				judge0TrackingIds: allJudgeResponses.map((resp) => resp.token),
+					judge0TrackingIds: allJudgeResponses.map(
+						(resp) => resp.token
+					),
 			},
 		});
-
+			return submission.id;
+		});
 		res.status(200).json({
-			submissionId: submission.id,
+			submissionId: submissionResult,
 			totalTestCases: problem.inputs.length,
 			judge0response: allJudgeResponses,
 		});
