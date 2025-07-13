@@ -21,7 +21,7 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 			res.status(400).json({ error: 'Unknown Judge0 status' });
 		}
 
-		const testCase = await prisma.testCase.update({
+		const updatedTestCase = await prisma.testCase.update({
 			where: { judge0TrackingId: parsedBody.token },
 			data: {
 				status: mappedStatus,
@@ -31,49 +31,53 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 			select: { submissionId: true },
 		});
 
-		if (!testCase) {
+		if (!updatedTestCase) {
 			res.status(404).json({ error: 'Test case not found' });
 		}
 
 		const allTestCases = await prisma.testCase.findMany({
-			where: { submissionId: testCase.submissionId },
+			where: { submissionId: updatedTestCase.submissionId },
 		});
 
-		if (!testCase.submissionId) {
+		const submissionId = updatedTestCase.submissionId;
+		if (!submissionId) {
 			throw new Error('Submission ID is null');
 		}
 
-		const pendingTestCases = allTestCases.some(
+		const hasPending = allTestCases.some(
 			(tc) => tc.status === outMapping['Pending']
 		);
-		const failedTestCases = allTestCases.some(
+		const hasFailures = allTestCases.some(
 			(tc) => tc.status !== outMapping['Accepted']
 		);
 
-		if (!pendingTestCases) {
-			const accepted = !failedTestCases;
-			const submission = await prisma.submission.update({
-				where: { id: testCase.submissionId },
-				data: {
-					status: accepted
-						? SubmissionStatus.SUCCESS
-						: SubmissionStatus.REJECTED,
-					runtime: Math.max(
-						...allTestCases.map((tc) => tc.runtime ?? 0)
-					),
-					memory: Math.max(
-						...allTestCases.map((tc) => tc.memory ?? 0)
-					),
-				},
-				select: {
-					userId: true,
-					problemId: true,
-					status: true,
-				},
-			});
+		if (!hasPending) {
+			await prisma.$transaction(async (tx) => {
+				const submission = await tx.submission.update({
+					where: { id: submissionId },
+					data: {
+						status: hasFailures
+							? SubmissionStatus.REJECTED
+							: SubmissionStatus.SUCCESS,
+						runtime: Math.max(
+							...allTestCases.map((tc) => tc.runtime ?? 0)
+						),
+						memory: Math.max(
+							...allTestCases.map((tc) => tc.memory ?? 0)
+						),
+					},
+					select: {
+						userId: true,
+						problemId: true,
+						status: true,
+					},
+				});
 
-			if (submission.userId && submission.problemId) {
-				const userProblem = await prisma.userProblem.findUnique({
+				if (!submission.userId || !submission.problemId) {
+					throw new Error('Submission missing userId or problemId');
+				}
+
+				const existing = await tx.userProblem.findUnique({
 					where: {
 						userId_problemId: {
 							userId: submission.userId,
@@ -82,9 +86,16 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 					},
 				});
 
-				if (userProblem) {
-					if (submission.status === SubmissionStatus.SUCCESS) {
-						await prisma.userProblem.update({
+				if (existing) {
+					const newStatus =
+						submission.status === SubmissionStatus.SUCCESS
+							? ProblemStatus.SOLVED
+							: existing.status === ProblemStatus.NOT_ATTEMPTED
+								? ProblemStatus.ATTEMPTED
+								: existing.status;
+
+					if (newStatus !== existing.status) {
+						await tx.userProblem.update({
 							where: {
 								userId_problemId: {
 									userId: submission.userId,
@@ -92,28 +103,13 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 								},
 							},
 							data: {
-								status: ProblemStatus.SOLVED,
-								updatedAt: new Date(),
-							},
-						});
-					} else if (
-						userProblem.status === ProblemStatus.NOT_ATTEMPTED
-					) {
-						await prisma.userProblem.update({
-							where: {
-								userId_problemId: {
-									userId: submission.userId,
-									problemId: submission.problemId,
-								},
-							},
-							data: {
-								status: ProblemStatus.ATTEMPTED,
+								status: newStatus,
 								updatedAt: new Date(),
 							},
 						});
 					}
 				} else {
-					await prisma.userProblem.create({
+					await tx.userProblem.create({
 						data: {
 							userId: submission.userId,
 							problemId: submission.problemId,
@@ -124,10 +120,12 @@ app.put('/submissions-callback', async (req: Request, res: Response) => {
 						},
 					});
 				}
-			}
+			});
 		}
 
-		res.status(200).json({ message: 'Test case updated successfully' });
+		res.status(200).json({
+			message: 'Test case updated successfully',
+		});
 	} catch (error) {
 		console.error('Error processing submission callback:', error);
 		res.status(500).json({
