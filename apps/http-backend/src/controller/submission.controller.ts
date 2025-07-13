@@ -137,24 +137,24 @@ export const createBatchSubmission = async (
 			});
 
 			await tx.testCase.createMany({
-			data: allJudgeResponses.map((resp, index) => ({
-				submissionId: submission.id,
-				status: TestCaseStatus.PENDING,
-				input: problem.inputs[index] ?? '',
-				output: problem.outputs[index] ?? '',
-				index,
-				judge0TrackingId: resp.token,
-			})),
-		});
+				data: allJudgeResponses.map((resp, index) => ({
+					submissionId: submission.id,
+					status: TestCaseStatus.PENDING,
+					input: problem.inputs[index] ?? '',
+					output: problem.outputs[index] ?? '',
+					index,
+					judge0TrackingId: resp.token,
+				})),
+			});
 
 			await tx.submission.update({
-			where: { id: submission.id },
-			data: {
+				where: { id: submission.id },
+				data: {
 					judge0TrackingIds: allJudgeResponses.map(
 						(resp) => resp.token
 					),
-			},
-		});
+				},
+			});
 			return submission.id;
 		});
 		res.status(200).json({
