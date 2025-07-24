@@ -19,6 +19,10 @@ importers:
         version: 5.5.4
 
   apps/boilerplate-generator:
+    dependencies:
+      dotenv:
+        specifier: ^16.4.7
+        version: 16.4.7
     devDependencies:
       '@repo/typescript-config':
         specifier: workspace:*

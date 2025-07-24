@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 
 interface Problem {
 	slug: string;
@@ -7,7 +8,7 @@ interface Problem {
 	outputs: string[];
 }
 
-const MOUNT_PATH = process.env.MOUNT_PATH || './../../apps/problems';
+const MOUNT_PATH = path.resolve(__dirname, '../../../../../hackstack-problems');
 
 export const getProblemCode = async (
 	slug: string,

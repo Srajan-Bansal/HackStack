@@ -5,12 +5,15 @@
 	"main": "index.js",
 	"scripts": {
 		"build": "tsc -b",
-		"generate": "pnpm build && node dist/index.js",
-		"generate-all": "pnpm build && node dist/generateAllProblems.js"
+		"generate": "pnpm build && node -r dotenv/config dist/index.js",
+		"generate-all": "pnpm build && node -r dotenv/config dist/generateAllProblems.js"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
+	"dependencies": {
+		"dotenv": "^16.4.7"
+	},
 	"devDependencies": {
 		"@repo/typescript-config": "workspace:*",
 		"@types/node": "^20.11.24"

@@ -80,10 +80,15 @@ export const getProblem = async (req: Request, res: Response) => {
 
 	const cacheKey = `problem:${problemSlug}:${languageId}`;
 	const redis = await getRedisClient();
-	const cached = await redis.get(cacheKey);
-	if (cached) {
-		const { problemMarkdown, partialBoilerpalteCode } = JSON.parse(cached);
-		res.status(200).json({ problemMarkdown, partialBoilerpalteCode });
+	if (redis) {
+		const cached = await redis.get(cacheKey);
+		if (cached) {
+			const { problemMarkdown, partialBoilerpalteCode } =
+				JSON.parse(cached);
+			return res
+				.status(200)
+				.json({ problemMarkdown, partialBoilerpalteCode });
+		}
 	}
 
 	const dbProblem = await prisma.problem.findUnique({
@@ -104,11 +109,13 @@ export const getProblem = async (req: Request, res: Response) => {
 		fileExtension: language.fileExtension,
 	});
 
-	await redis.set(
-		cacheKey,
-		JSON.stringify({ problemMarkdown, partialBoilerpalteCode }),
-		{ EX: 86400 } // Cache for 1 day
-	);
+	if (redis) {
+		await redis.set(
+			cacheKey,
+			JSON.stringify({ problemMarkdown, partialBoilerpalteCode }),
+			{ EX: 86400 } // Cache for 1 day
+		);
+	}
 
 	res.status(200).json({
 		problemMarkdown,

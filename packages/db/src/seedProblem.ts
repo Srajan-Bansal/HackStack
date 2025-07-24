@@ -3,7 +3,6 @@ import { getProblemMarkdown } from './../../../apps/http-backend/src/utils/getPr
 
 const prisma = new PrismaClient();
 
-const FILEPATH = './../../../apps/problems/max-element/';
 const SLUG = 'max-element';
 
 const problemMarkdown = getProblemMarkdown(SLUG);

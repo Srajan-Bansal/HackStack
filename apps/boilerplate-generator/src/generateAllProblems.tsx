@@ -3,7 +3,7 @@ import path from 'path';
 import { ProblemDefinationParser } from './ProblemDefinationGenerator';
 import { FullProblemDefinitionParser } from './FullProblemDefinationGenerator';
 
-const problemsDir = path.join(__dirname, './../../problems');
+const problemsDir = path.resolve(__dirname, '../../../hackstack-problems');
 
 function generateBoilerplateForAllProblems() {
 	// Get all problem directories
