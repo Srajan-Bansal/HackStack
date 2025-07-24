@@ -297,6 +297,16 @@ importers:
       redis:
         specifier: ^5.6.0
         version: 5.6.0
+    devDependencies:
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.16.5
+      typescript:
+        specifier: ^5.6.3
+        version: 5.6.3
 
   packages/typescript-config: {}
 
@@ -6624,7 +6634,7 @@ snapshots:
   '@types/glob@7.2.0':
     dependencies:
       '@types/minimatch': 5.1.2
-      '@types/node': 20.17.17
+      '@types/node': 22.16.5
 
   '@types/hast@3.0.4':
     dependencies:
@@ -6706,7 +6716,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 20.17.17
+      '@types/node': 22.16.5
 
   '@types/tinycolor2@1.4.6': {}
 

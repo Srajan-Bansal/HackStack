@@ -83,9 +83,7 @@ export const getProblem = async (req: Request, res: Response) => {
 	const cached = await redis.get(cacheKey);
 	if (cached) {
 		const { problemMarkdown, partialBoilerpalteCode } = JSON.parse(cached);
-		return res
-			.status(200)
-			.json({ problemMarkdown, partialBoilerpalteCode });
+		res.status(200).json({ problemMarkdown, partialBoilerpalteCode });
 	}
 
 	const dbProblem = await prisma.problem.findUnique({
