@@ -8,30 +8,34 @@ datasource db {
 }
 
 model User {
-  id          String        @id @default(uuid())
-  email       String        @unique
-  name        String?
-  provider    String?
-  password    String
-  role        UserRole      @default(USER)
-  Submission  Submission[]
-  UserProblem UserProblem[]
-  createdAt   DateTime      @default(now())
+  id                String              @id @default(uuid())
+  email             String              @unique
+  name              String?
+  provider          String?
+  password          String
+  role              UserRole            @default(USER)
+  Submission        Submission[]
+  UserProblem       UserProblem[]
+  createdAt         DateTime            @default(now())
+  ContestSubmission ContestSubmission[]
+  ContestPoints     ContestPoints[]
 }
 
 model Problem {
-  id          Int           @id
-  title       String
-  description String
-  slug        String        @unique
-  hidden      Boolean       @default(false)
-  difficulty  Difficulty
-  type        ProblemType[]
-  Submission  Submission[]
-  DefaultCode DefaultCode[]
-  UserProblem UserProblem[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                Int                 @id
+  title             String
+  description       String
+  slug              String              @unique
+  hidden            Boolean             @default(false)
+  difficulty        Difficulty
+  type              ProblemType[]
+  Submission        Submission[]
+  DefaultCode       DefaultCode[]
+  UserProblem       UserProblem[]
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  ContestProblem    ContestProblem[]
+  ContestSubmission ContestSubmission[]
 
   @@index([slug])
 }
@@ -106,6 +110,57 @@ model Language {
   Submission    Submission[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+}
+
+model Contest {
+  id                 String              @id @default(uuid())
+  name               String
+  description        String?
+  startTime          DateTime
+  endTime            DateTime
+  hidden             Boolean             @default(false)
+  problems           ContestProblem[]
+  contestSubmissions ContestSubmission[]
+  leaderboard        Boolean             @default(false)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+}
+
+model ContestProblem {
+  id        String   @id @default(uuid())
+  contest   Contest  @relation(fields: [contestId], references: [id])
+  contestId String
+  problem   Problem  @relation(fields: [problemId], references: [id])
+  problemId Int
+  index     Int
+  solved    Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([contestId, problemId])
+}
+
+model ContestSubmission {
+  id           String   @id @default(uuid())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       String
+  problem      Problem  @relation(fields: [problemId], references: [id])
+  problemId    Int
+  Contest      Contest  @relation(fields: [contestId], references: [id])
+  contestId    String
+  submissionId String?
+  createdAt    DateTime @default(now())
+}
+
+model ContestPoints {
+  id        String @id @default(uuid())
+  contestId String
+  user      User   @relation(fields: [userId], references: [id])
+  userId    String
+  points    Int    @default(0)
+  rank      Int    @default(0)
+
+  @@unique([contestId, userId])
 }
 
 enum TestCaseStatus {

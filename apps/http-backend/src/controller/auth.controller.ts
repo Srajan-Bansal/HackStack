@@ -4,21 +4,28 @@ import prisma from '@repo/db/client';
 import jwt from 'jsonwebtoken';
 import { handleError } from '../utils/errorHandler';
 import bcrypt from 'bcryptjs';
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 const generateToken = (id: string): string => {
-	return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-		expiresIn: process.env.JWT_EXPIRES_IN,
+	if (!process.env.JWT_SECRET) {
+		throw new Error('JWT_SECRET is not configured');
+	}
+	return jwt.sign({ id }, process.env.JWT_SECRET, {
+		expiresIn: process.env.JWT_EXPIRES_IN || '7d',
 	});
 };
 
 const sendCookie = (res: Response, token: string) => {
 	const cookieOptions = {
-		maxAge: 7 * 24 * 60 * 60 * 1000, // Default 7 days
+		maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
 		httpOnly: true,
-		sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+		sameSite:
+			process.env.NODE_ENV === 'production'
+				? ('none' as const)
+				: ('lax' as const),
 		secure: process.env.NODE_ENV === 'production',
 	};
-	res.cookie('authToken', token, cookieOptions as any);
+	res.cookie('authToken', token, cookieOptions);
 };
 
 export const signup = async (req: Request, res: Response) => {
@@ -111,14 +118,11 @@ export const logout = async (req: Request, res: Response) => {
 	}
 };
 
-export const getUser = async (
-	req: Request & { userId?: string },
-	res: Response
-) => {
+export const getUser = async (req: AuthenticatedRequest, res: Response) => {
 	try {
-		const userId = req.userId as string;
+		const userId = req.userId;
 		if (!userId) {
-			return handleError(res, 400, 'Not Authenticated');
+			return handleError(res, 401, 'Not Authenticated');
 		}
 
 		const user = await prisma.user.findUnique({
@@ -127,6 +131,8 @@ export const getUser = async (
 				id: true,
 				email: true,
 				name: true,
+				role: true,
+				createdAt: true,
 			},
 		});
 
@@ -134,8 +140,9 @@ export const getUser = async (
 			return handleError(res, 404, 'User not found');
 		}
 
-		res.status(200).json({ user });
+		res.status(200).json({ user: user });
 	} catch (error) {
+		console.error('Get user error:', error);
 		return handleError(res, 500, 'Failed to get user');
 	}
 };

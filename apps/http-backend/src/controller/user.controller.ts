@@ -1,10 +1,7 @@
 import { Request, Response } from 'express';
 import prisma, { SubmissionStatus, Difficulty } from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
-
-interface AuthenticatedRequest extends Request {
-	userId?: string;
-}
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 export const getUserSubmissionsForProblem = async (
 	req: AuthenticatedRequest,

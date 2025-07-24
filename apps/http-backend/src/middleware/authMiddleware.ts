@@ -4,9 +4,11 @@ import { handleError } from '../utils/errorHandler';
 
 interface JwtPayload {
 	id: string;
+	iat: number;
+	exp: number;
 }
 
-interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends Request {
 	userId?: string;
 }
 
@@ -17,19 +19,32 @@ export const authMiddleware = (
 ) => {
 	const token = req.cookies.authToken;
 	if (!token) {
-		return handleError(res, 401, 'Unauthorized');
+		return handleError(res, 401, 'Unauthorized - No token provided');
+	}
+
+	if (!process.env.JWT_SECRET) {
+		console.error('JWT_SECRET is not configured');
+		return handleError(res, 500, 'Internal server error');
 	}
 
 	try {
-		const decoded = jwt.verify(
-			token,
-			process.env.JWT_SECRET as string
-		) as JwtPayload;
+		const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
 		req.userId = decoded.id;
-		return next();
+		next();
 	} catch (error) {
-		res.clearCookie('authToken');
-		return handleError(res, 401, 'Invalid token');
+		res.clearCookie('authToken', {
+			httpOnly: true,
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+			secure: process.env.NODE_ENV === 'production',
+		});
+
+		if (error instanceof jwt.TokenExpiredError) {
+			return handleError(res, 401, 'Token expired');
+		} else if (error instanceof jwt.JsonWebTokenError) {
+			return handleError(res, 401, 'Invalid token');
+		} else {
+			return handleError(res, 401, 'Token verification failed');
+		}
 	}
 };
 
@@ -43,15 +58,21 @@ export const isLoggedIn = (
 		return next();
 	}
 
+	if (!process.env.JWT_SECRET) {
+		console.error('JWT_SECRET is not configured');
+		return next();
+	}
+
 	try {
-		const decoded = jwt.verify(
-			token,
-			process.env.JWT_SECRET as string
-		) as JwtPayload;
+		const decoded = jwt.verify(token, process.env.JWT_SECRET) as JwtPayload;
 		req.userId = decoded.id;
-		return next();
+		next();
 	} catch (error) {
-		res.clearCookie('authToken');
-		return next();
+		res.clearCookie('authToken', {
+			httpOnly: true,
+			sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+			secure: process.env.NODE_ENV === 'production',
+		});
+		next();
 	}
 };

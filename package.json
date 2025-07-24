@@ -4,10 +4,12 @@
 	"scripts": {
 		"build": "turbo build",
 		"dev": "turbo dev",
+		"start": "turbo start",
 		"lint": "turbo lint",
-		"lint:ci": "turbo lint:ci",
+		"type-check": "turbo type-check",
 		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
 		"web": "turbo run dev --filter=!submission-webhook",
+		"backend": "turbo run dev --filter=http-backend",
 		"prisma:generate": "pnpm --filter @repo/db exec pnpm prisma generate",
 		"prisma:migrate": "pnpm --filter @repo/db exec pnpm prisma migrate dev",
 		"prisma:seedLanguage": "pnpm --filter @repo/db exec pnpm run seedLanguage"

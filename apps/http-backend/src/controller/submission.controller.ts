@@ -15,9 +15,9 @@ const JUDGE_API_URL = process.env.JUDGE_API_URL;
 const JUDGE0_CALLBACK_URL = process.env.JUDGE0_CALLBACK_URL;
 const CHUNK_SIZE = 20;
 
-interface SubmissionRequest extends Request {
-	userId?: string;
-}
+import { AuthenticatedRequest } from '../middleware/authMiddleware';
+
+interface SubmissionRequest extends AuthenticatedRequest {}
 
 export const createBatchSubmission = async (
 	req: SubmissionRequest,
