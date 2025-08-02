@@ -16,38 +16,34 @@ import {
 	PopoverTrigger,
 } from '@repo/ui/components/Popover';
 import { LanguageMapping } from '@repo/language/LanguageMapping';
+import { Language } from '@repo/common-zod/types';
 
-export function LanguageSelect({
+export const LanguageSelect = React.memo(function LanguageSelect({
 	selectedLanguage,
 	setSelectedLanguage,
 }: {
-	selectedLanguage: {
-		value: string;
-		label: string;
-		monaco: string;
-		judge0: number;
-	} | null;
-	setSelectedLanguage: React.Dispatch<
-		React.SetStateAction<{
-			value: string;
-			label: string;
-			monaco: string;
-			judge0: number;
-		} | null>
-	>;
+	selectedLanguage: Language | null;
+	setSelectedLanguage: (language: Language | null) => void;
 }) {
 	const [open, setOpen] = React.useState(false);
-	const languages = Object.entries(LanguageMapping).map(([key, lang]) => ({
-		value: key,
-		label: lang.name,
-		monaco: lang.monaco,
-		judge0: lang.judge0,
-	}));
+	const languages = React.useMemo(
+		() =>
+			Object.entries(LanguageMapping).map(([key, lang]) => ({
+				value: key,
+				label: lang.name,
+				monaco: lang.monaco,
+				judge0: lang.judge0,
+			})),
+		[]
+	);
 
-	const handleSelect = (lang: (typeof languages)[0]) => {
-		setSelectedLanguage(lang);
-		setOpen(false);
-	};
+	const handleSelect = React.useCallback(
+		(lang: (typeof languages)[0]) => {
+			setSelectedLanguage(lang);
+			setOpen(false);
+		},
+		[setSelectedLanguage]
+	);
 
 	return (
 		<Popover
@@ -95,4 +91,4 @@ export function LanguageSelect({
 			</PopoverContent>
 		</Popover>
 	);
-}
+});

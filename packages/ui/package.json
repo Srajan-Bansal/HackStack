@@ -20,6 +20,7 @@
 		"@repo/eslint-config": "workspace:*",
 		"@repo/language": "workspace:*",
 		"@repo/typescript-config": "workspace:*",
+		"@repo/common-zod": "workspace:*",
 		"@turbo/gen": "^1.12.4",
 		"@types/node": "^20.11.24",
 		"@types/react": "18.3.0",
