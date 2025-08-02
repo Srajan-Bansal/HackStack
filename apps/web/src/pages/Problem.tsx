@@ -1,7 +1,8 @@
 import { useParams } from 'react-router-dom';
 import Header from './../components/Header';
-import { useEffect, useState } from 'react';
-import { getProblem, getBoilerplateCode } from '../lib/api';
+import { useEffect, useState, useMemo } from 'react';
+import { getProblem } from '../lib/api';
+import { Language } from '@repo/common-zod/types';
 import ProblemSubmitBar from '../components/ProblemSubmitBar';
 import Spinner from '@repo/ui/components/Spinner';
 import { LanguageMapping } from '@repo/language/LanguageMapping';
@@ -17,21 +18,31 @@ const Problem = () => {
 	const [problem, setProblem] = useState<string | null>(null);
 	const [code, setCode] = useState<string>('');
 	const [isLoading, setIsLoading] = useState(false);
-	const [selectedLanguage, setSelectedLanguage] = useState(() => {
+
+	const languages = useMemo(
+		() =>
+			Object.entries(LanguageMapping).map(([key, lang]) => ({
+				value: key,
+				label: lang.name,
+				monaco: lang.monaco,
+				judge0: lang.judge0,
+			})),
+		[]
+	);
+
+	const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(() => {
+		const savedLanguage = localStorage.getItem('preferredLanguage');
 		return (
-			Object.entries(LanguageMapping)
-				.map(([key, lang]) => ({
-					value: key,
-					label: lang.name,
-					monaco: lang.monaco,
-					judge0: lang.judge0,
-				}))
-				.find((lang) => lang.value === 'java') || null
+			languages.find((lang) => lang.value === savedLanguage) ||
+			languages.find((lang) => lang.value === 'javascript') ||
+			languages[0] ||
+			null
 		);
 	});
 
 	useEffect(() => {
 		if (slug && selectedLanguage) {
+			setIsLoading(true);
 			getProblem(slug, selectedLanguage.value)
 				.then((data) => {
 					if (data) {
@@ -39,26 +50,29 @@ const Problem = () => {
 						setCode(data.partialBoilerpalteCode || '');
 					}
 				})
-				.catch(() => setProblem('Failed to load problem description.'));
+				.catch(() => {
+					setProblem('Failed to load problem description.');
+					setCode('// Failed to load boilerplate code');
+				})
+				.finally(() => setIsLoading(false));
 		}
-	}, [slug]);
+	}, [slug, selectedLanguage]);
 
 	useEffect(() => {
-		if (slug && selectedLanguage) {
-			setIsLoading(true);
-			getBoilerplateCode(slug, selectedLanguage.value)
-				.then((data) => {
-					if (data) setCode(data.partialBoilerpalteCode || '');
-				})
-				.catch(() => setCode('// Failed to load boilerplate code'))
-				.finally(() => setIsLoading(false));
+		if (selectedLanguage) {
+			localStorage.setItem('preferredLanguage', selectedLanguage.value);
 		}
 	}, [selectedLanguage]);
 
 	if (!problem) {
 		return (
-			<div className='flex items-center justify-center h-screen'>
+			<div
+				className='flex items-center justify-center h-screen'
+				role='status'
+				aria-live='polite'
+			>
 				<Spinner />
+				<span className='sr-only'>Loading problem...</span>
 			</div>
 		);
 	}
@@ -66,12 +80,16 @@ const Problem = () => {
 	return (
 		<div className='min-h-screen bg-background'>
 			<Header />
-			<div className='flex mx-6'>
+			<main
+				className='flex mx-6'
+				role='main'
+			>
 				<ResizablePanelGroup direction='horizontal'>
 					<ResizablePanel
 						minSize={20}
 						maxSize={80}
 						defaultSize={50}
+						aria-label='Problem description panel'
 					>
 						<ProblemDesp
 							problem={problem}
@@ -82,12 +100,14 @@ const Problem = () => {
 					</ResizablePanel>
 					<ResizableHandle
 						withHandle
-						className='border-none focus:ring-0'
+						className='border-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+						aria-label='Resize panels'
 					/>
 					<ResizablePanel
 						minSize={20}
 						maxSize={80}
 						defaultSize={50}
+						aria-label='Code editor and submission panel'
 					>
 						<ProblemSubmitBar
 							slug={slug}
@@ -98,7 +118,7 @@ const Problem = () => {
 						/>
 					</ResizablePanel>
 				</ResizablePanelGroup>
-			</div>
+			</main>
 		</div>
 	);
 };
