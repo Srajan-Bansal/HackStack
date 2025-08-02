@@ -8,34 +8,53 @@ class RedisClient {
 	private maxRetries = 3;
 	private shouldRetry = true;
 
-	constructor() {
+	private static instance: RedisClient;
+
+	private constructor() {
+		const defaultUrl =
+			process.env.DOCKER_ENV === 'true'
+				? 'redis://hackstack-redis:6379'
+				: 'redis://localhost:6379';
+
 		this.client = createClient({
-			url: process.env.REDIS_URL || 'redis://localhost:6379',
+			url: process.env.REDIS_URL || defaultUrl,
 			database: parseInt(process.env.REDIS_DB ?? '1'),
 		});
 
 		this.client.on('error', (err) => {
 			this.retryCount++;
 			if (this.retryCount >= this.maxRetries) {
-				console.warn('Redis connection failed after', this.maxRetries, 'attempts. Running without cache.');
+				console.warn(
+					'Redis connection failed after',
+					this.maxRetries,
+					'attempts. Running without cache.'
+				);
 				this.shouldRetry = false;
 			} else {
-				console.log(`Redis connection attempt ${this.retryCount}/${this.maxRetries} failed. Retrying...`);
+				console.log(
+					`Redis connection attempt ${this.retryCount}/${this.maxRetries} failed. Retrying...`
+				);
 			}
 		});
 
 		this.client.on('connect', () => {
-			console.log('Redis Client Connected');
+			console.log('✅ Redis Client Connected:', this.client.options?.url);
 		});
 	}
 
-	async connect(): Promise<void> {
-		if (!this.shouldRetry) {
-			return;
+	public static getInstance(): RedisClient {
+		if (!RedisClient.instance) {
+			RedisClient.instance = new RedisClient();
 		}
-		
+		return RedisClient.instance;
+	}
+
+	public async connect(): Promise<void> {
+		if (!this.shouldRetry) return;
+
 		if (!this.isConnected && !this.connectionPromise) {
-			this.connectionPromise = this.client.connect()
+			this.connectionPromise = this.client
+				.connect()
 				.then(() => {
 					this.isConnected = true;
 					this.retryCount = 0;
@@ -51,13 +70,13 @@ class RedisClient {
 		if (this.connectionPromise) {
 			try {
 				await this.connectionPromise;
-			} catch (err) {
-				// Silently fail after max retries
+			} catch {
+				// fail silently after max retries
 			}
 		}
 	}
 
-	async disconnect(): Promise<void> {
+	public async disconnect(): Promise<void> {
 		if (this.isConnected) {
 			await this.client.disconnect();
 			this.isConnected = false;
@@ -65,18 +84,13 @@ class RedisClient {
 		}
 	}
 
-	getClient(): RedisClientType | null {
-		if (!this.isConnected || !this.shouldRetry) {
-			return null;
-		}
+	public getClient(): RedisClientType | null {
+		if (!this.isConnected || !this.shouldRetry) return null;
 		return this.client;
 	}
 }
 
-// Singleton instance
-const redisClient = new RedisClient();
-
-// Auto-connect in non-test environments
+const redisClient = RedisClient.getInstance();
 if (process.env.NODE_ENV !== 'test') {
 	redisClient.connect().catch(console.error);
 }

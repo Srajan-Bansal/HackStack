@@ -8,22 +8,21 @@ interface DifficultyBadgeProps {
 
 const DifficultyBadge = ({ difficulty }: DifficultyBadgeProps) => {
 	return (
-		<span>
-			<Badge
-				className='capitalize'
-				color={
-					difficulty === 'easy'
-						? 'green'
-						: difficulty === 'medium'
-							? 'yellow'
-							: difficulty === 'hard'
-								? 'red'
-								: 'cyan'
-				}
-			>
-				{difficulty}
-			</Badge>
-		</span>
+		<Badge
+			className='capitalize'
+			color={
+				difficulty === 'easy'
+					? 'green'
+					: difficulty === 'medium'
+						? 'yellow'
+						: difficulty === 'hard'
+							? 'red'
+							: 'cyan'
+			}
+			aria-label={`Difficulty level: ${difficulty}`}
+		>
+			{difficulty}
+		</Badge>
 	);
 };
 
