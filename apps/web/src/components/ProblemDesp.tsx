@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
 	Tabs,
 	TabsContent,
 	TabsList,
 	TabsTrigger,
 } from '@repo/ui/components/react-tabs';
-import { getUserSubmmissions } from '../lib/api';
+import { getUserSubmissions } from '../lib/api';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Spinner from '@repo/ui/components/Spinner';
 import SubmissionTable from './SubmissionTable';
 import { SubmissionType } from '../utils/types';
 
-const ProblemDesp = ({
+const ProblemDesp = React.memo(({
 	problem,
 	isLoading,
 	setIsLoading,
@@ -28,7 +28,7 @@ const ProblemDesp = ({
 	useEffect(() => {
 		setIsLoading(true);
 		if (problemSlug) {
-			getUserSubmmissions(problemSlug)
+			getUserSubmissions(problemSlug)
 				.then((data) => {
 					setIsLoading(false);
 					setSubmissions(data);
@@ -36,7 +36,7 @@ const ProblemDesp = ({
 				})
 				.catch(() => setIsLoading(false));
 		}
-	}, []);
+	}, [problemSlug, setIsLoading]);
 
 	if (isLoading) {
 		return <Spinner />;
@@ -111,7 +111,9 @@ const ProblemDesp = ({
 			</div>
 		</Tabs>
 	);
-};
+});
+
+ProblemDesp.displayName = 'ProblemDesp';
 
 export default ProblemDesp;
 

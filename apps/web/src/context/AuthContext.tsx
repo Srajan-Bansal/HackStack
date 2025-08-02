@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { userLogin, userSignup, userLogout } from './../lib/api';
 import { toast } from '@repo/ui/components/sonner';
 
@@ -61,13 +61,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		setLoading(false);
 	}, []);
 
-	const login = async (email: string, password: string) => {
+	const login = useCallback(async (email: string, password: string) => {
 		try {
 			setLoading(true);
 			setError(null);
 
 			const response = await userLogin(email, password);
-			console.log(response);
 			if (response && response.user) {
 				saveUserToLocalStorage(response.user);
 				setUser(response.user);
@@ -82,9 +81,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
-	const signup = async (email: string, password: string, name: string) => {
+	const signup = useCallback(async (email: string, password: string, name: string) => {
 		try {
 			setLoading(true);
 			setError(null);
@@ -105,48 +104,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
-	const logout = async () => {
+	const logout = useCallback(async () => {
 		try {
 			setLoading(true);
 			setError(null);
 
-			const response = await userLogout();
-
-			if (response) {
-				localStorage.removeItem('user');
-				setUser(null);
-				setIsAuthenticated(false);
-			}
-		} catch {
+			await userLogout();
 			localStorage.removeItem('user');
 			setUser(null);
 			setIsAuthenticated(false);
-			setError('Logout error');
-			toast.error('Logout error');
+			toast.success('Successfully logged out');
+		} catch (err: any) {
+			localStorage.removeItem('user');
+			setUser(null);
+			setIsAuthenticated(false);
+			const errorMessage =
+				err?.response?.data?.message || 'Logout failed';
+			setError(errorMessage);
+			toast.error(errorMessage);
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
-	const clearError = () => {
+	const clearError = useCallback(() => {
 		setError(null);
-	};
+	}, []);
+
+	const contextValue = useMemo(() => ({
+		user,
+		loading,
+		error,
+		login,
+		signup,
+		logout,
+		isAuthenticated,
+		clearError,
+	}), [user, loading, error, login, signup, logout, isAuthenticated, clearError]);
 
 	return (
-		<AuthContext.Provider
-			value={{
-				user,
-				loading,
-				error,
-				login,
-				signup,
-				logout,
-				isAuthenticated,
-				clearError,
-			}}
-		>
+		<AuthContext.Provider value={contextValue}>
 			{children}
 		</AuthContext.Provider>
 	);

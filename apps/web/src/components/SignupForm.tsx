@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@repo/ui/lib/utils';
@@ -16,13 +16,16 @@ export function SignupForm({
 	const { signup, error, loading } = useAuth();
 	const navigate = useNavigate();
 
-	const handleSubmit = async (e: React.FormEvent) => {
-		e.preventDefault();
-		await signup(email, password, name);
-		if (!error) {
-			navigate('/problemset');
-		}
-	};
+	const handleSubmit = useCallback(
+		async (e: React.FormEvent) => {
+			e.preventDefault();
+			await signup(email, password, name);
+			if (!error) {
+				navigate('/problemset');
+			}
+		},
+		[email, password, name, signup, error, navigate]
+	);
 
 	return (
 		<form
