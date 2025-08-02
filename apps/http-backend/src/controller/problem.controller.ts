@@ -86,6 +86,7 @@ export const getProblem = async (req: Request, res: Response) => {
 			const { problemMarkdown, partialBoilerpalteCode } =
 				JSON.parse(cached);
 			res.status(200).json({ problemMarkdown, partialBoilerpalteCode });
+			return;
 		}
 	}
 
