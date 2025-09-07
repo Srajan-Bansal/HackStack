@@ -20,10 +20,7 @@ export const getProblem = async (problemSlug: string, languageId: string) => {
 	return response.data;
 };
 
-export const getBoilerplateCode = async (
-	problemSlug: string,
-	languageId: string
-) => {
+export const getBoilerplateCode = async (problemSlug: string, languageId: string) => {
 	const response = await axios.get(
 		`${BACKEND_URL}/api/v1/problem/${problemSlug}/getBoilerplateCode`,
 		{
@@ -34,11 +31,7 @@ export const getBoilerplateCode = async (
 	return response.data;
 };
 
-export const submitSolution = async (
-	problemSlug: string,
-	code: string,
-	languageId: string
-) => {
+export const submitSolution = async (problemSlug: string, code: string, languageId: string) => {
 	const response = await axios.post(
 		`${BACKEND_URL}/api/v1/createSubmission/${problemSlug}`,
 		{ code, languageId },
@@ -48,13 +41,7 @@ export const submitSolution = async (
 };
 
 export const checkBatchSubmission = async (tokens: string[]) => {
-	const response = await axios.post(
-		`${BACKEND_URL}/api/v1/check`,
-		{
-			tokens,
-		},
-		{ withCredentials: true }
-	);
+	const response = await axios.post(`${BACKEND_URL}/api/v1/check`, { tokens, }, { withCredentials: true });
 	return response.data;
 };
 
@@ -77,20 +64,8 @@ export const userLogin = async (email: string, password: string) => {
 	return response.data;
 };
 
-export const userSignup = async (
-	email: string,
-	password: string,
-	name: string
-) => {
-	const response = await axios.post(
-		`${BACKEND_URL}/api/v1/signup`,
-		{
-			email,
-			password,
-			name,
-		},
-		{ withCredentials: true }
-	);
+export const userSignup = async (email: string, password: string, name: string) => {
+	const response = await axios.post(`${BACKEND_URL}/api/v1/signup`, { email, password, name }, { withCredentials: true });
 	return response.data;
 };
 

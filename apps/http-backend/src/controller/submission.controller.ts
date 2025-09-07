@@ -17,7 +17,7 @@ const CHUNK_SIZE = 20;
 
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
-interface SubmissionRequest extends AuthenticatedRequest {}
+interface SubmissionRequest extends AuthenticatedRequest { }
 
 export const createBatchSubmission = async (
 	req: SubmissionRequest,
@@ -38,9 +38,7 @@ export const createBatchSubmission = async (
 				slug: true,
 				DefaultCode: {
 					where: {
-						languageId:
-							LanguageMapping[parsedBody.languageId]?.internal ??
-							0,
+						languageId: LanguageMapping[parsedBody.languageId]?.internal ?? 0,
 						DefaultCodeType: DefaultCodeType.FULLBOILERPLATECODE,
 					},
 					select: {
@@ -54,25 +52,15 @@ export const createBatchSubmission = async (
 			return handleError(res, 404, 'Problem not found');
 		}
 
-		const problem = await getProblemCode(
-			problemSlug,
-			parsedBody.languageId
-		);
+		const problem = await getProblemCode(problemSlug, parsedBody.languageId);
 
 		const fullBoilerPlate = dbProblem.DefaultCode[0]?.code;
 
 		if (!fullBoilerPlate) {
-			return handleError(
-				res,
-				404,
-				'Full boilerplate not found in database'
-			);
+			return handleError(res, 404, 'Full boilerplate not found in database');
 		}
 
-		const fullCodeWithUserCode = fullBoilerPlate.replace(
-			'##USER_CODE_HERE##',
-			parsedBody.code
-		);
+		const fullCodeWithUserCode = fullBoilerPlate.replace('##USER_CODE_HERE##', parsedBody.code);
 
 		const problemId = dbProblem.id;
 		const userId = req.userId;

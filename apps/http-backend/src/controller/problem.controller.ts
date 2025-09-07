@@ -9,11 +9,10 @@ import {
 import { LanguageMapping } from '@repo/language/LanguageMapping';
 import { CreateProblemSchema } from '@repo/common-zod/types';
 import { DefaultCodeType } from '@repo/db/client';
-import { getRedisClient } from '@repo/redis-client';
 
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
-interface ProblemsRequest extends AuthenticatedRequest {}
+interface ProblemsRequest extends AuthenticatedRequest { }
 
 interface Problems {
 	id: number;
@@ -78,18 +77,6 @@ export const getProblem = async (req: Request, res: Response) => {
 	const problemSlug = req.params.problemSlug as string;
 	const languageId = req.query.languageId as string;
 
-	const cacheKey = `problem:${problemSlug}:${languageId}`;
-	const redis = await getRedisClient();
-	if (redis) {
-		const cached = await redis.get(cacheKey);
-		if (cached) {
-			const { problemMarkdown, partialBoilerpalteCode } =
-				JSON.parse(cached);
-			res.status(200).json({ problemMarkdown, partialBoilerpalteCode });
-			return;
-		}
-	}
-
 	const dbProblem = await prisma.problem.findUnique({
 		where: { slug: problemSlug, hidden: false },
 	});
@@ -107,14 +94,6 @@ export const getProblem = async (req: Request, res: Response) => {
 		slug: problemSlug,
 		fileExtension: language.fileExtension,
 	});
-
-	if (redis) {
-		await redis.set(
-			cacheKey,
-			JSON.stringify({ problemMarkdown, partialBoilerpalteCode }),
-			{ EX: 86400 } // Cache for 1 day
-		);
-	}
 
 	res.status(200).json({
 		problemMarkdown,
@@ -174,14 +153,7 @@ export const createProblem = async (req: Request, res: Response) => {
 	try {
 		await prisma.$transaction(async (tx) => {
 			for (const problemData of parsedBody) {
-				const {
-					id,
-					title,
-					problemSlug,
-					difficulty,
-					hidden,
-					problemType,
-				} = problemData;
+				const { id, title, problemSlug, difficulty, hidden, problemType } = problemData;
 
 				const problemMarkdown = await getProblemMarkdown(problemSlug);
 

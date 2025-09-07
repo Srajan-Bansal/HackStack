@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import Header from './../components/Header';
 import { useEffect, useState, useMemo } from 'react';
-import { getProblem } from '../lib/api';
+import { getProblem, getBoilerplateCode } from '../lib/api';
 import { Language } from '@repo/common-zod/types';
 import ProblemSubmitBar from '../components/ProblemSubmitBar';
 import Spinner from '@repo/ui/components/Spinner';
@@ -56,7 +56,21 @@ const Problem = () => {
 				})
 				.finally(() => setIsLoading(false));
 		}
-	}, [slug, selectedLanguage]);
+	}, [slug]);
+
+	useEffect(() => {
+		if (slug && selectedLanguage && problem) {
+			getBoilerplateCode(slug, selectedLanguage.value)
+				.then((data) => {
+					if (data?.partialBoilerpalteCode) {
+						setCode(data.partialBoilerpalteCode);
+					}
+				})
+				.catch(() => {
+					setCode('// Failed to load boilerplate code');
+				});
+		}
+	}, [selectedLanguage, slug, problem]);
 
 	useEffect(() => {
 		if (selectedLanguage) {

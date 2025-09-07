@@ -27,7 +27,6 @@
 		"@repo/common-zod": "workspace:*",
 		"@repo/db": "workspace:*",
 		"@repo/language": "workspace:*",
-		"@repo/redis-client": "workspace:*",
 		"@repo/typescript-config": "workspace:*",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/cookie-parser": "^1.4.8",
