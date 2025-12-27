@@ -1,144 +1,224 @@
-import express, { Request, Response } from 'express';
-import morgan from 'morgan';
-import prisma, { SubmissionStatus, ProblemStatus } from '@repo/db/client';
-import { SubmissionCallback } from '@repo/common-zod/types';
-import { outMapping } from './outputMapping';
+import { consumer } from './kafka.config';
+import prisma, { SubmissionStatus, ProblemStatus, TestCaseStatus } from '@repo/db/client';
 
-const app = express();
+interface ExecutorResponse {
+	status: 'SUCCESS' | 'ERROR';
+	data: string | string[];
+	errorList: string | string[];
+	submissionId: string;
+	userId: string;
+	problemId: number;
+}
 
-app.use(morgan('dev'));
-app.use(express.json());
+class ExecutorConsumer {
+	async start() {
+		await consumer.connect();
+		console.log('📡 Kafka consumer connected to code-results topic');
 
-app.put('/submissions-callback', async (req: Request, res: Response) => {
-	try {
-		const parsedBody = SubmissionCallback.parse(req.body);
-		if (!parsedBody) {
-			res.status(400).json({ error: 'Invalid request body' });
-		}
+		await consumer.subscribe({ topic: 'code-results', fromBeginning: false });
+		console.log('✅ Subscribed to code-results topic');
 
-		const mappedStatus = outMapping[parsedBody.status.description];
-		if (!mappedStatus) {
-			res.status(400).json({ error: 'Unknown Judge0 status' });
-		}
-
-		const updatedTestCase = await prisma.testCase.update({
-			where: { judge0TrackingId: parsedBody.token },
-			data: {
-				status: mappedStatus,
-				runtime: parseFloat(parsedBody.time),
-				memory: parsedBody.memory,
-			},
-			select: { submissionId: true },
-		});
-
-		if (!updatedTestCase) {
-			res.status(404).json({ error: 'Test case not found' });
-		}
-
-		const allTestCases = await prisma.testCase.findMany({
-			where: { submissionId: updatedTestCase.submissionId },
-		});
-
-		const submissionId = updatedTestCase.submissionId;
-		if (!submissionId) {
-			throw new Error('Submission ID is null');
-		}
-
-		const hasPending = allTestCases.some(
-			(tc) => tc.status === outMapping['Pending']
-		);
-		const hasFailures = allTestCases.some(
-			(tc) => tc.status !== outMapping['Accepted']
-		);
-
-		if (!hasPending) {
-			await prisma.$transaction(async (tx) => {
-				const submission = await tx.submission.update({
-					where: { id: submissionId },
-					data: {
-						status: hasFailures
-							? SubmissionStatus.REJECTED
-							: SubmissionStatus.SUCCESS,
-						runtime: Math.max(
-							...allTestCases.map((tc) => tc.runtime ?? 0)
-						),
-						memory: Math.max(
-							...allTestCases.map((tc) => tc.memory ?? 0)
-						),
-					},
-					select: {
-						userId: true,
-						problemId: true,
-						status: true,
-					},
-				});
-
-				if (!submission.userId || !submission.problemId) {
-					throw new Error('Submission missing userId or problemId');
-				}
-
-				const existing = await tx.userProblem.findUnique({
-					where: {
-						userId_problemId: {
-							userId: submission.userId,
-							problemId: submission.problemId,
-						},
-					},
-				});
-
-				if (existing) {
-					const newStatus =
-						submission.status === SubmissionStatus.SUCCESS
-							? ProblemStatus.SOLVED
-							: existing.status === ProblemStatus.NOT_ATTEMPTED
-								? ProblemStatus.ATTEMPTED
-								: existing.status;
-
-					if (newStatus !== existing.status) {
-						await tx.userProblem.update({
-							where: {
-								userId_problemId: {
-									userId: submission.userId,
-									problemId: submission.problemId,
-								},
-							},
-							data: {
-								status: newStatus,
-								updatedAt: new Date(),
-							},
-						});
+		await consumer.run({
+			eachMessage: async ({ topic, partition, message }) => {
+				try {
+					if (!message.value) {
+						console.error('❌ Received empty message');
+						return;
 					}
-				} else {
-					await tx.userProblem.create({
-						data: {
-							userId: submission.userId,
-							problemId: submission.problemId,
-							status:
-								submission.status === SubmissionStatus.SUCCESS
-									? ProblemStatus.SOLVED
-									: ProblemStatus.ATTEMPTED,
-						},
-					});
-				}
-			});
-		}
 
-		res.status(200).json({
-			message: 'Test case updated successfully',
-		});
-	} catch (error) {
-		console.error('Error processing submission callback:', error);
-		res.status(500).json({
-			error: 'Internal Server Error',
-			details: error instanceof Error ? error.message : String(error),
+					const rawMessage = message.value.toString();
+					console.log(`📩 Raw message received: ${rawMessage}`);
+					const result: ExecutorResponse = JSON.parse(rawMessage);
+					console.log(`📥 Parsed result:`, JSON.stringify(result, null, 2));
+					console.log(`📥 Processing result for submission: ${result.submissionId}`);
+
+					await this.processExecutionResult(result);
+				} catch (error) {
+					console.error('❌ Error processing message:', error);
+				}
+			},
 		});
 	}
-});
 
-app.get('/', (req: Request, res: Response) => {
-	res.send('Hello World!');
-});
+	private async processExecutionResult(result: ExecutorResponse) {
+		try {
+			if (result.status === 'ERROR') {
+				await this.handleError(result);
+			} else {
+				await this.handleSuccess(result);
+			}
+		} catch (error) {
+			console.error('❌ Error in processExecutionResult:', error);
+			throw error;
+		}
+	}
 
-app.listen(5000, '0.0.0.0', () => {
-	console.log(`Server is running on port 5000`);
-});
+	private async handleError(result: ExecutorResponse) {
+		const errorMessage = Array.isArray(result.errorList) ? result.errorList.join('\n') : result.errorList;
+
+		let testCaseStatus: TestCaseStatus = TestCaseStatus.RUNTIME_ERROR;
+
+		if (errorMessage.toLowerCase().includes('compilation error')) {
+			testCaseStatus = TestCaseStatus.COMPILATION_ERROR;
+		} else if (errorMessage.toLowerCase().includes('time limit')) {
+			testCaseStatus = TestCaseStatus.TIME_LIMIT_EXCEEDED;
+		} else if (errorMessage.toLowerCase().includes('memory limit')) {
+			testCaseStatus = TestCaseStatus.MEMORY_LIMIT_EXCEEDED;
+		}
+
+		await prisma.$transaction(async (tx) => {
+			await tx.testCase.updateMany({
+				where: { submissionId: result.submissionId },
+				data: { status: testCaseStatus },
+			});
+
+			await tx.submission.update({
+				where: { id: result.submissionId },
+				data: { status: SubmissionStatus.REJECTED },
+			});
+
+			await this.updateUserProblemStatus(
+				tx,
+				result.userId,
+				result.problemId,
+				SubmissionStatus.REJECTED
+			);
+		});
+
+		console.log(`✅ Updated submission ${result.submissionId} with error status`);
+	}
+
+	private async handleSuccess(result: ExecutorResponse) {
+		await prisma.$transaction(async (tx) => {
+			const testCases = await tx.testCase.findMany({
+				where: { submissionId: result.submissionId },
+				orderBy: { index: 'asc' },
+			});
+
+			const results = Array.isArray(result.data) ? result.data : [result.data];
+			const allPassed = results.every(r => r && r.includes('passed'));
+
+			if (Array.isArray(result.data) && result.data.length === testCases.length) {
+				// Batch update: group test cases by status
+				const passedTestCaseIds: string[] = [];
+				const failedTestCaseIds: string[] = [];
+
+				for (let i = 0; i < testCases.length; i++) {
+					const testResult = results[i];
+					const isPassed = testResult?.includes('passed');
+
+					if (isPassed) {
+						passedTestCaseIds.push(testCases[i]!.id);
+					} else {
+						failedTestCaseIds.push(testCases[i]!.id);
+					}
+				}
+
+				if (passedTestCaseIds.length > 0) {
+					await tx.testCase.updateMany({
+						where: { id: { in: passedTestCaseIds } },
+						data: { status: TestCaseStatus.ACCEPTED },
+					});
+				}
+
+				if (failedTestCaseIds.length > 0) {
+					await tx.testCase.updateMany({
+						where: { id: { in: failedTestCaseIds } },
+						data: { status: TestCaseStatus.WRONG_ANSWER },
+					});
+				}
+			} else {
+				await tx.testCase.updateMany({
+					where: { submissionId: result.submissionId },
+					data: { status: TestCaseStatus.ACCEPTED },
+				});
+			}
+
+			const submissionStatus = allPassed ? SubmissionStatus.SUCCESS : SubmissionStatus.REJECTED;
+
+			await tx.submission.update({
+				where: { id: result.submissionId },
+				data: { status: submissionStatus },
+			});
+
+			await this.updateUserProblemStatus(
+				tx,
+				result.userId,
+				result.problemId,
+				submissionStatus
+			);
+		});
+
+		console.log(`✅ Updated submission ${result.submissionId} successfully`);
+	}
+
+	private async updateUserProblemStatus(tx: any, userId: string, problemId: number, submissionStatus: SubmissionStatus) {
+		const existing = await tx.userProblem.findUnique({
+			where: {
+				userId_problemId: {
+					userId,
+					problemId,
+				},
+			},
+		});
+
+		if (existing) {
+			const newStatus = submissionStatus === SubmissionStatus.SUCCESS
+				? ProblemStatus.SOLVED
+				: existing.status === ProblemStatus.NOT_ATTEMPTED ? ProblemStatus.ATTEMPTED : existing.status;
+
+			if (newStatus !== existing.status) {
+				await tx.userProblem.update({
+					where: {
+						userId_problemId: {
+							userId,
+							problemId,
+						},
+					},
+					data: {
+						status: newStatus,
+						updatedAt: new Date(),
+					},
+				});
+			}
+		} else {
+			await tx.userProblem.create({
+				data: {
+					userId,
+					problemId,
+					status: submissionStatus === SubmissionStatus.SUCCESS ? ProblemStatus.SOLVED : ProblemStatus.ATTEMPTED,
+				},
+			});
+		}
+	}
+
+	async stop() {
+		await consumer.disconnect();
+		console.log('🔌 Kafka consumer disconnected');
+	}
+}
+
+// Start the consumer
+const executorConsumer = new ExecutorConsumer();
+
+const startConsumer = async () => {
+	try {
+		await executorConsumer.start();
+	} catch (error) {
+		console.error('❌ Failed to start consumer:', error);
+		process.exit(1);
+	}
+};
+
+// Graceful shutdown
+const shutdown = async () => {
+	console.log('\n🛑 Shutting down gracefully...');
+	await executorConsumer.stop();
+	await prisma.$disconnect();
+	process.exit(0);
+};
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
+startConsumer();
