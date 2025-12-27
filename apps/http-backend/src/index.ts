@@ -7,6 +7,8 @@ import problemRouter from './routes/problem.route';
 import submissionRouter from './routes/submission.route';
 import userRouter from './routes/user.route';
 import cookieParser from 'cookie-parser';
+import { initKafkaProducer, disconnectKafkaProducer } from './services/kafka.service';
+import prisma from '@repo/db/client';
 
 const app = express();
 
@@ -30,13 +32,56 @@ app.use('/api/v1', submissionRouter);
 app.use('/api/v1', userRouter);
 
 const PORT = process.env.PORT;
-const server = app.listen(PORT, () => {
-	console.log(`Server is running on port ${PORT}`);
-});
 
-process.on('SIGINT', () => {
-	server.close(() => {
-		console.log('Server closed gracefully');
-		process.exit(0);
-	});
-});
+const startServer = async () => {
+	try {
+		// Initialize Kafka producer on startup
+		await initKafkaProducer();
+		console.log('✅ Kafka producer ready');
+
+		// Start HTTP server
+		const server = app.listen(PORT, () => {
+			console.log(`✅ Server running on port ${PORT}`);
+		});
+
+		// Graceful shutdown handler
+		const shutdown = async (signal: string) => {
+			console.log(`\n${signal} received, starting graceful shutdown...`);
+
+			// Stop accepting new requests
+			server.close(() => {
+				console.log('✅ HTTP server closed');
+			});
+
+			// Set timeout for forceful shutdown
+			setTimeout(() => {
+				console.warn('⚠️ Forcefully shutting down after timeout');
+				process.exit(1);
+			}, 30000);
+
+			try {
+				// Flush Kafka messages
+				await disconnectKafkaProducer();
+				console.log('✅ Kafka producer disconnected');
+
+				// Close database
+				await prisma.$disconnect();
+				console.log('✅ Database disconnected');
+
+				console.log('✅ Graceful shutdown complete');
+				process.exit(0);
+			} catch (error) {
+				console.error('❌ Error during shutdown:', error);
+				process.exit(1);
+			}
+		};
+
+		process.on('SIGTERM', () => shutdown('SIGTERM'));
+		process.on('SIGINT', () => shutdown('SIGINT'));
+	} catch (error) {
+		console.error('❌ Failed to start server:', error);
+		process.exit(1);
+	}
+};
+
+startServer();
