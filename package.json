@@ -12,7 +12,8 @@
 		"backend": "turbo run dev --filter=http-backend",
 		"prisma:generate": "pnpm --filter @repo/db exec pnpm prisma generate",
 		"prisma:migrate": "pnpm --filter @repo/db exec pnpm prisma migrate dev",
-		"prisma:seedLanguage": "pnpm --filter @repo/db exec pnpm run seedLanguage"
+		"prisma:seedLanguage": "pnpm --filter @repo/db exec pnpm run seedLanguage",
+		"prisma:seedProblem": "pnpm --filter @repo/db exec pnpm run seedProblem"
 	},
 	"devDependencies": {
 		"prettier": "^3.2.5",

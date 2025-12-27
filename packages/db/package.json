@@ -8,7 +8,8 @@
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"seedLanguage": "ts-node ./src/seedLanguage.ts"
+		"seedLanguage": "ts-node ./src/seedLanguage.ts",
+		"seedProblem": "ts-node ./src/seedProblem.ts"
 	},
 	"keywords": [],
 	"author": "",
@@ -16,6 +17,7 @@
 	"devDependencies": {
 		"@repo/typescript-config": "workspace:*",
 		"@repo/language": "workspace:*",
+		"@types/node": "^20.0.0",
 		"prisma": "^6.2.1",
 		"ts-node": "^10.9.1"
 	},
