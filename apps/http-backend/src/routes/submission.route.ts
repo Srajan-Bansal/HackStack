@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import {
-	createBatchSubmission,
-	checkBatchSubmission,
+	createSubmission,
 	checkSubmission,
 	getUserSubmissions,
 } from '../controller/submission.controller';
@@ -11,8 +10,7 @@ const router: Router = Router();
 
 router.use(authMiddleware);
 
-router.post('/createSubmission/:problemSlug', createBatchSubmission);
-router.post('/check', checkBatchSubmission);
+router.post('/createSubmission/:problemSlug', createSubmission);
 router.get('/checkSubmission', checkSubmission);
 router.get('/userSubmissions/:problemSlug', getUserSubmissions);
 
