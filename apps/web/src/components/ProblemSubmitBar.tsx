@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import CodeEditor from '../components/@monaco-editor/CodeEditor';
 import { Button } from '@repo/ui/components/Button';
 import { LanguageSelect } from '@repo/ui/components/LanguageSelect';
-import { submitSolution, checkBatchSubmission } from '../lib/api';
+import { submitSolution, checkSubmission } from '../lib/api';
 import { toast } from '@repo/ui/components/sonner';
 import { Language } from '@repo/common-zod/types';
 
@@ -26,62 +26,48 @@ const ProblemSubmitBar = React.memo(
 		setSelectedLanguage: (language: Language | null) => void;
 	}) => {
 		const [status, setStatus] = useState<SubmitStatus>();
-		const POLL_INTERVAL = 10000;
-		const MAX_RETRIES = 10;
+		const POLL_INTERVAL = 2000;
+		const MAX_RETRIES = 30;
 
 		const pollForResult = useCallback(
-			async (currentTokens: string[], maxRetries: number) => {
+			async (submissionId: string, maxRetries: number) => {
 				let retries = 0;
 
 				async function poll() {
-					if (currentTokens.length === 0 || retries >= maxRetries) {
+					if (retries >= maxRetries) {
 						setStatus(SubmitStatus.ACTIVE);
-						if (retries >= maxRetries) {
-							toast.error('Submission failed. Please try again.');
+						toast.error('Submission timeout. Please try again.');
+						return;
+					}
+
+					try {
+						const response = await checkSubmission(submissionId);
+						console.log('Submission status:', response);
+
+						if (!response) {
+							setStatus(SubmitStatus.ACTIVE);
+							toast.error('Failed to check submission status.');
+							return;
 						}
-						return;
-					}
 
-					const response = await checkBatchSubmission(currentTokens);
-					console.log('Batch Response:', response);
-
-					if (!response || !response.submissions) {
+						// Check submission status
+						if (response.status === 'SUCCESS') {
+							setStatus(SubmitStatus.ACTIVE);
+							toast.success('Submission completed successfully!');
+							return;
+						} else if (response.status === 'REJECTED') {
+							setStatus(SubmitStatus.ACTIVE);
+							toast.error('Submission failed. Check your code and try again.');
+							return;
+						} else if (response.status === 'PENDING') {
+							retries++;
+							setTimeout(poll, POLL_INTERVAL);
+						}
+					} catch (error) {
+						console.error('Error checking submission:', error);
 						setStatus(SubmitStatus.ACTIVE);
-						toast.error('Submission failed. Please try again.');
-						return;
+						toast.error('Error checking submission status.');
 					}
-
-					const submissions = response.submissions;
-
-					const failedSubmissions = submissions.filter(
-						(sub: { status: { id: number } }) => sub.status.id >= 4
-					);
-
-					if (failedSubmissions.length > 0) {
-						setStatus(SubmitStatus.ACTIVE);
-						toast.error(
-							'Submission failed. Check your code and try again.'
-						);
-						return;
-					}
-
-					const pendingTokens = submissions
-						.filter(
-							(sub: { status: { id: number } }) =>
-								sub.status.id === 1 || sub.status.id === 2
-						)
-						.map((sub: { token: string }) => sub.token);
-
-					if (pendingTokens.length === 0) {
-						setStatus(SubmitStatus.ACTIVE);
-						toast.success('Submission completed successfully!');
-						return;
-					}
-
-					currentTokens = pendingTokens;
-					retries++;
-
-					setTimeout(poll, POLL_INTERVAL);
 				}
 
 				await poll();
@@ -93,19 +79,19 @@ const ProblemSubmitBar = React.memo(
 			if (!slug || !code || !selectedLanguage) return;
 			setStatus(SubmitStatus.PENDING);
 
-			const response = await submitSolution(
-				slug,
-				code,
-				selectedLanguage.value
-			);
-			if (response && response.judge0response) {
-				const newTokens = response.judge0response.map(
-					(sub: { token: string }) => sub.token
-				);
-				console.log('Tokens:', newTokens);
-				pollForResult(newTokens, MAX_RETRIES);
-			} else {
+			try {
+				const response = await submitSolution(slug, code, selectedLanguage.value);
+				if (response && response.submissionId) {
+					console.log('Submission ID:', response.submissionId);
+					pollForResult(response.submissionId, MAX_RETRIES);
+				} else {
+					setStatus(SubmitStatus.ACTIVE);
+					toast.error('Failed to submit code. Please try again.');
+				}
+			} catch (error) {
+				console.error('Error submitting code:', error);
 				setStatus(SubmitStatus.ACTIVE);
+				toast.error('Failed to submit code. Please try again.');
 			}
 		}, [slug, code, selectedLanguage, MAX_RETRIES, pollForResult]);
 

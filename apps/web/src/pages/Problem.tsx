@@ -25,7 +25,6 @@ const Problem = () => {
 				value: key,
 				label: lang.name,
 				monaco: lang.monaco,
-				judge0: lang.judge0,
 			})),
 		[]
 	);

@@ -40,8 +40,14 @@ export const submitSolution = async (problemSlug: string, code: string, language
 	return response.data;
 };
 
-export const checkBatchSubmission = async (tokens: string[]) => {
-	const response = await axios.post(`${BACKEND_URL}/api/v1/check`, { tokens, }, { withCredentials: true });
+export const checkSubmission = async (submissionId: string) => {
+	const response = await axios.get(
+		`${BACKEND_URL}/api/v1/checkSubmission`,
+		{
+			params: { submission_id: submissionId },
+			withCredentials: true,
+		}
+	);
 	return response.data;
 };
 
