@@ -5,12 +5,10 @@ import { FullProblemDefinitionParser } from './FullProblemDefinationGenerator';
 
 function generatePartialBoilerplate(generatorFilePath: string) {
 	const inputFilePath = path.join(
-		__dirname,
 		generatorFilePath,
 		'Structure.md'
 	);
 	const boilerplatePath = path.join(
-		__dirname,
 		generatorFilePath,
 		'boilerplate'
 	);
@@ -40,12 +38,10 @@ function generatePartialBoilerplate(generatorFilePath: string) {
 
 function generateFullBoilerplate(generateFilePath: string) {
 	const inputFilePath = path.join(
-		__dirname,
 		generateFilePath,
 		'Structure.md'
 	);
 	const boilerplatePath = path.join(
-		__dirname,
 		generateFilePath,
 		'boilerplate-full'
 	);
@@ -73,7 +69,7 @@ function generateFullBoilerplate(generateFilePath: string) {
 	console.log(`BoilerplateFull code generated successfully!`);
 }
 
-const problemPath = path.resolve(__dirname, '../../../hackstack-problems/reverse-string');
+const problemPath = path.resolve(__dirname, '../../../../hackstack-problems/two-sum');
 
 // Generate boilerplate code
 generatePartialBoilerplate(problemPath);

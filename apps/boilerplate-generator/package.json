@@ -4,7 +4,7 @@
 	"description": "",
 	"main": "index.js",
 	"scripts": {
-		"build": "tsc -b",
+		"build": "npx tsc -b",
 		"generate": "pnpm build && node -r dotenv/config dist/index.js",
 		"generate-all": "pnpm build && node -r dotenv/config dist/generateAllProblems.js"
 	},
@@ -16,6 +16,7 @@
 	},
 	"devDependencies": {
 		"@repo/typescript-config": "workspace:*",
-		"@types/node": "^20.11.24"
+		"@types/node": "^20.11.24",
+		"typescript": "^5.5.4"
 	}
 }
