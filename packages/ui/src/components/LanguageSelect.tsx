@@ -32,7 +32,6 @@ export const LanguageSelect = React.memo(function LanguageSelect({
 				value: key,
 				label: lang.name,
 				monaco: lang.monaco,
-				judge0: lang.judge0,
 			})),
 		[]
 	);

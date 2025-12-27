@@ -66,7 +66,6 @@ export const LanguageSchema = z.object({
 	value: z.string(),
 	label: z.string(),
 	monaco: z.string(),
-	judge0: z.number(),
 });
 
 export type Language = z.infer<typeof LanguageSchema>;

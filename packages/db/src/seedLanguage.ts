@@ -15,7 +15,6 @@ async function main() {
 			create: {
 				id: lang.internal,
 				name: lang.name,
-				judge0Id: lang.judge0,
 				fileExtension: lang.fileExtension,
 				monaco: lang.monaco,
 			},
