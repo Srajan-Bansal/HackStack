@@ -96,45 +96,46 @@ class ExecutorConsumer {
 			});
 
 			const results = Array.isArray(result.data) ? result.data : [result.data];
-			const allPassed = results.every(r => r && r.includes('passed'));
+			const executedCount = results.length;
 
-			if (Array.isArray(result.data) && result.data.length === testCases.length) {
-				// Batch update: group test cases by status
-				const passedTestCaseIds: string[] = [];
-				const failedTestCaseIds: string[] = [];
+			const passedTestCaseIds: string[] = [];
+			const failedTestCaseIds: string[] = [];
 
-				for (let i = 0; i < testCases.length; i++) {
-					const testResult = results[i];
-					const isPassed = testResult?.includes('passed');
+			for (let i = 0; i < executedCount && i < testCases.length; i++) {
+				const testResult = results[i];
+				const isPassed = testResult?.includes('passed');
 
-					if (isPassed) {
-						passedTestCaseIds.push(testCases[i]!.id);
-					} else {
-						failedTestCaseIds.push(testCases[i]!.id);
+				if (isPassed) {
+					passedTestCaseIds.push(testCases[i]!.id);
+				} else {
+					let errorStatus: TestCaseStatus = TestCaseStatus.WRONG_ANSWER;
+					if (testResult?.toLowerCase().includes('runtime error')) {
+						errorStatus = TestCaseStatus.RUNTIME_ERROR;
+					} else if (testResult?.toLowerCase().includes('time limit')) {
+						errorStatus = TestCaseStatus.TIME_LIMIT_EXCEEDED;
+					} else if (testResult?.toLowerCase().includes('memory')) {
+						errorStatus = TestCaseStatus.MEMORY_LIMIT_EXCEEDED;
 					}
-				}
 
-				if (passedTestCaseIds.length > 0) {
-					await tx.testCase.updateMany({
-						where: { id: { in: passedTestCaseIds } },
-						data: { status: TestCaseStatus.ACCEPTED },
+					failedTestCaseIds.push(testCases[i]!.id);
+
+					await tx.testCase.update({
+						where: { id: testCases[i]!.id },
+						data: { status: errorStatus },
 					});
 				}
+			}
 
-				if (failedTestCaseIds.length > 0) {
-					await tx.testCase.updateMany({
-						where: { id: { in: failedTestCaseIds } },
-						data: { status: TestCaseStatus.WRONG_ANSWER },
-					});
-				}
-			} else {
+			if (passedTestCaseIds.length > 0) {
 				await tx.testCase.updateMany({
-					where: { submissionId: result.submissionId },
+					where: { id: { in: passedTestCaseIds } },
 					data: { status: TestCaseStatus.ACCEPTED },
 				});
 			}
 
-			const submissionStatus = allPassed ? SubmissionStatus.SUCCESS : SubmissionStatus.REJECTED;
+			const allExecutedPassed = results.every(r => r && r.includes('passed'));
+			const allTestCasesExecuted = executedCount === testCases.length;
+			const submissionStatus = (allExecutedPassed && allTestCasesExecuted) ? SubmissionStatus.SUCCESS : SubmissionStatus.REJECTED;
 
 			await tx.submission.update({
 				where: { id: result.submissionId },
