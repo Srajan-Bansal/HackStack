@@ -46,7 +46,7 @@ const Problem = () => {
 				.then((data) => {
 					if (data) {
 						setProblem(data.problemMarkdown);
-						setCode(data.partialBoilerpalteCode || '');
+						setCode(data.partialBoilerplateCode || '');
 					}
 				})
 				.catch(() => {
@@ -61,8 +61,8 @@ const Problem = () => {
 		if (slug && selectedLanguage && problem) {
 			getBoilerplateCode(slug, selectedLanguage.value)
 				.then((data) => {
-					if (data?.partialBoilerpalteCode) {
-						setCode(data.partialBoilerpalteCode);
+					if (data?.partialBoilerplateCode) {
+						setCode(data.partialBoilerplateCode);
 					}
 				})
 				.catch(() => {

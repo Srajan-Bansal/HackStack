@@ -5,12 +5,13 @@ import {
 	getUserSubmissions,
 } from '../controller/submission.controller';
 import { authMiddleware } from '../middleware/authMiddleware';
+import { submissionLimiter } from '../middleware/rateLimiter';
 
 const router: Router = Router();
 
 router.use(authMiddleware);
 
-router.post('/createSubmission/:problemSlug', createSubmission);
+router.post('/createSubmission/:problemSlug', submissionLimiter, createSubmission);
 router.get('/checkSubmission', checkSubmission);
 router.get('/userSubmissions/:problemSlug', getUserSubmissions);
 

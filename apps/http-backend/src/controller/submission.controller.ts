@@ -51,13 +51,11 @@ export const createSubmission = async (req: AuthenticatedRequest, res: Response)
 			return handleError(res, 404, 'Boilerplate code not found for this language');
 		}
 
-		// Get test cases
 		const problem = await getProblemCode(problemSlug, languageId);
+
 		const fullCode = fullBoilerPlate.replace('##USER_CODE_HERE##', code);
 
-		// Create submission record and test cases
-		const submissionId = await prisma.$transaction(async (tx) => {
-			// Mark problem as attempted
+		const submissionId = await prisma.$transaction(async (tx: any) => {
 			await tx.userProblem.upsert({
 				where: {
 					userId_problemId: {
@@ -73,7 +71,6 @@ export const createSubmission = async (req: AuthenticatedRequest, res: Response)
 				update: {},
 			});
 
-			// Create submission
 			const submission = await tx.submission.create({
 				data: {
 					userId,
@@ -85,7 +82,6 @@ export const createSubmission = async (req: AuthenticatedRequest, res: Response)
 				},
 			});
 
-			// Create test cases
 			await tx.testCase.createMany({
 				data: problem.inputs.map((input, index) => ({
 					submissionId: submission.id,
@@ -99,7 +95,6 @@ export const createSubmission = async (req: AuthenticatedRequest, res: Response)
 			return submission.id;
 		});
 
-		// Send to executor via Kafka
 		await sendCodeExecution({
 			language: languageId,
 			code: fullCode,
@@ -161,10 +156,7 @@ export const checkSubmission = async (req: Request, res: Response) => {
 	}
 };
 
-export const getUserSubmissions = async (
-	req: AuthenticatedRequest,
-	res: Response
-) => {
+export const getUserSubmissions = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		const userId = req.userId;
 		const problemSlug = req.params.problemSlug as string;

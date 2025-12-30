@@ -3,10 +3,7 @@ import prisma, { SubmissionStatus, Difficulty } from '@repo/db/client';
 import { handleError } from '../utils/errorHandler';
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
-export const getUserSubmissionsForProblem = async (
-	req: AuthenticatedRequest,
-	res: Response
-) => {
+export const getUserSubmissionsForProblem = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		if (!req.userId) {
 			return handleError(res, 401, 'Unauthorized');
@@ -51,10 +48,7 @@ export const getUserSubmissionsForProblem = async (
 	}
 };
 
-export const getSubmissionDetails = async (
-	req: AuthenticatedRequest,
-	res: Response
-) => {
+export const getSubmissionDetails = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		if (!req.userId) {
 			return handleError(res, 401, 'Authentication required');
@@ -84,24 +78,21 @@ export const getSubmissionDetails = async (
 	}
 };
 
-export const getUserSubmissionStats = async (
-	req: AuthenticatedRequest,
-	res: Response
-) => {
+export const getUserSubmissionStats = async (req: AuthenticatedRequest, res: Response) => {
 	try {
 		if (!req.userId) {
 			return handleError(res, 401, 'Authentication required');
 		}
 
-		const totalSubmissions = await prisma.submission.count({
-			where: { userId: req.userId },
-		});
+		const [totalSubmissions, acceptedSubmissions] = await Promise.all([
+			prisma.submission.count({ where: { userId: req.userId } }),
+			prisma.submission.count({
+				where: { userId: req.userId, status: SubmissionStatus.SUCCESS },
+			}),
+		]);
 
-		const acceptedSubmissions = await prisma.submission.count({
-			where: { userId: req.userId, status: SubmissionStatus.SUCCESS },
-		});
-
-		const solvedProblems = await prisma.problem.count({
+		const solvedProblemsByDifficulty = await prisma.problem.groupBy({
+			by: ['difficulty'],
 			where: {
 				Submission: {
 					some: {
@@ -110,54 +101,23 @@ export const getUserSubmissionStats = async (
 					},
 				},
 			},
+			_count: true,
 		});
 
-		const easyProblemsSolved = await prisma.problem.count({
-			where: {
-				Submission: {
-					some: {
-						userId: req.userId,
-						status: SubmissionStatus.SUCCESS,
-					},
-				},
-				difficulty: Difficulty.EASY,
-			},
+		const difficultyMap = { easy: 0, medium: 0, hard: 0 };
+		solvedProblemsByDifficulty.forEach((item: any) => {
+			const difficulty = item.difficulty.toLowerCase();
+			difficultyMap[difficulty as keyof typeof difficultyMap] = item._count;
 		});
 
-		const mediumProblemsSolved = await prisma.problem.count({
-			where: {
-				Submission: {
-					some: {
-						userId: req.userId,
-						status: SubmissionStatus.SUCCESS,
-					},
-				},
-				difficulty: Difficulty.MEDIUM,
-			},
-		});
-
-		const hardProblemsSolved = await prisma.problem.count({
-			where: {
-				Submission: {
-					some: {
-						userId: req.userId,
-						status: SubmissionStatus.SUCCESS,
-					},
-				},
-				difficulty: Difficulty.HARD,
-			},
-		});
-
-		res.status(200).json({
+		const stats = {
 			totalSubmissions,
 			acceptedSubmissions,
-			solvedProblems,
-			byDifficulty: {
-				easy: easyProblemsSolved,
-				medium: mediumProblemsSolved,
-				hard: hardProblemsSolved,
-			},
-		});
+			solvedProblems: difficultyMap.easy + difficultyMap.medium + difficultyMap.hard,
+			byDifficulty: difficultyMap,
+		};
+
+		res.status(200).json(stats);
 	} catch (error) {
 		return handleError(res, 500, 'Failed to fetch submission stats');
 	}

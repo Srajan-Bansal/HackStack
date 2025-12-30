@@ -9,7 +9,6 @@ import {
 import { LanguageMapping } from '@repo/language/LanguageMapping';
 import { CreateProblemSchema } from '@repo/common-zod/types';
 import { DefaultCodeType } from '@repo/db/client';
-
 import { AuthenticatedRequest } from '../middleware/authMiddleware';
 
 interface ProblemsRequest extends AuthenticatedRequest { }
@@ -56,13 +55,12 @@ export const getProblems = async (req: ProblemsRequest, res: Response) => {
 			},
 		});
 
-		problems = problemsWithStatus.map((problem) => ({
+		problems = problemsWithStatus.map((problem: any) => ({
 			id: problem.id,
 			title: problem.title,
 			difficulty: problem.difficulty,
 			slug: problem.slug,
-			status:
-				problem.UserProblem[0]?.status || ProblemStatus.NOT_ATTEMPTED,
+			status: problem.UserProblem[0]?.status || ProblemStatus.NOT_ATTEMPTED,
 		}));
 	}
 
@@ -75,7 +73,7 @@ export const getProblems = async (req: ProblemsRequest, res: Response) => {
 
 export const getProblem = async (req: Request, res: Response) => {
 	const problemSlug = req.params.problemSlug as string;
-	const languageId = req.query.languageId as string;
+	const languageId = (req.query.languageId as string) || 'java';
 
 	const dbProblem = await prisma.problem.findUnique({
 		where: { slug: problemSlug, hidden: false },
@@ -90,21 +88,15 @@ export const getProblem = async (req: Request, res: Response) => {
 	}
 
 	const problemMarkdown = await getProblemMarkdown(problemSlug);
-	const partialBoilerpalteCode = await getPartialBoilerplate({
+	const partialBoilerplateCode = await getPartialBoilerplate({
 		slug: problemSlug,
 		fileExtension: language.fileExtension,
 	});
 
-	res.status(200).json({
-		problemMarkdown,
-		partialBoilerpalteCode,
-	});
+	res.status(200).json({ problemMarkdown, partialBoilerplateCode });
 };
 
-export const getPartialBoilerplateCodeByLanguageId = async (
-	req: Request,
-	res: Response
-) => {
+export const getPartialBoilerplateCodeByLanguageId = async (req: Request, res: Response) => {
 	const problemSlug = req.params.problemSlug as string;
 	const languageId = req.query.languageId as string;
 
@@ -122,14 +114,12 @@ export const getPartialBoilerplateCodeByLanguageId = async (
 		return handleError(res, 400, 'Unsupported language');
 	}
 
-	const partialBoilerpalteCode = await getPartialBoilerplate({
+	const partialBoilerplateCode = await getPartialBoilerplate({
 		slug: problemSlug,
 		fileExtension: language.fileExtension,
 	});
 
-	res.status(200).json({
-		partialBoilerpalteCode,
-	});
+	res.status(200).json({ partialBoilerplateCode });
 };
 
 export const deleteProblem = async (req: Request, res: Response) => {
@@ -151,7 +141,7 @@ export const createProblem = async (req: Request, res: Response) => {
 	}
 
 	try {
-		await prisma.$transaction(async (tx) => {
+		await prisma.$transaction(async (tx: any) => {
 			for (const problemData of parsedBody) {
 				const { id, title, problemSlug, difficulty, hidden, problemType } = problemData;
 

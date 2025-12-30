@@ -6,11 +6,14 @@ import {
 	Navigate,
 	Outlet,
 } from 'react-router-dom';
+import Home from './pages/Home';
 import Index from './pages/Index';
 import Problem from './pages/Problem';
 import Auth from './pages/Auth';
+import Profile from './pages/Profile';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Spinner from '@repo/ui/components/Spinner';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const RedirectIfAuthenticated = () => {
 	const { isAuthenticated } = useAuth();
@@ -48,7 +51,7 @@ const AppRoutes = () => {
 			</Route>
 			<Route
 				path='/'
-				element={<Navigate to='/problemset' />}
+				element={<Home />}
 			/>
 			<Route
 				path='/problemset'
@@ -58,19 +61,25 @@ const AppRoutes = () => {
 				path='/problem/:slug'
 				element={<Problem />}
 			/>
+			<Route
+				path='/profile'
+				element={<Profile />}
+			/>
 		</Routes>
 	);
 };
 
 const App = () => {
 	return (
-		<Theme>
-			<BrowserRouter>
-				<AuthProvider>
-					<AppRoutes />
-				</AuthProvider>
-			</BrowserRouter>
-		</Theme>
+		<ErrorBoundary>
+			<Theme>
+				<BrowserRouter>
+					<AuthProvider>
+						<AppRoutes />
+					</AuthProvider>
+				</BrowserRouter>
+			</Theme>
+		</ErrorBoundary>
 	);
 };
 

@@ -11,6 +11,9 @@ import remarkGfm from 'remark-gfm';
 import Spinner from '@repo/ui/components/Spinner';
 import SubmissionTable from './SubmissionTable';
 import { SubmissionType } from '../utils/types';
+import { useAuth } from '../context/AuthContext';
+import { Button } from '@repo/ui/components/Button';
+import { Link } from 'react-router-dom';
 
 const ProblemDesp = React.memo(({
 	problem,
@@ -23,11 +26,12 @@ const ProblemDesp = React.memo(({
 	setIsLoading: (isLoading: boolean) => void;
 	problemSlug: string;
 }) => {
+	const { isAuthenticated } = useAuth();
 	const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
 
 	useEffect(() => {
-		setIsLoading(true);
-		if (problemSlug) {
+		if (problemSlug && isAuthenticated) {
+			setIsLoading(true);
 			getUserSubmissions(problemSlug)
 				.then((data) => {
 					setIsLoading(false);
@@ -36,7 +40,7 @@ const ProblemDesp = React.memo(({
 				})
 				.catch(() => setIsLoading(false));
 		}
-	}, [problemSlug, setIsLoading]);
+	}, [problemSlug, setIsLoading, isAuthenticated]);
 
 	if (isLoading) {
 		return <Spinner />;
@@ -99,7 +103,21 @@ const ProblemDesp = React.memo(({
 						<h3 className='text-xl font-medium'>
 							Your Submissions
 						</h3>
-						{isLoading ? (
+						{!isAuthenticated ? (
+							<div className='flex flex-col items-center justify-center py-12 gap-4'>
+								<p className='text-gray-600 dark:text-gray-400 text-center'>
+									Please log in to view your submission history
+								</p>
+								<div className='flex gap-4'>
+									<Link to='/login'>
+										<Button>Log In</Button>
+									</Link>
+									<Link to='/signup'>
+										<Button variant='outline'>Sign Up</Button>
+									</Link>
+								</div>
+							</div>
+						) : isLoading ? (
 							<div className='flex justify-center py-8'>
 								<Spinner />
 							</div>

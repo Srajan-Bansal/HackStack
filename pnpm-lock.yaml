@@ -54,6 +54,9 @@ importers:
       express:
         specifier: ^4.21.1
         version: 4.21.2
+      express-rate-limit:
+        specifier: ^7.4.1
+        version: 7.5.1(express@4.21.2)
       jsonwebtoken:
         specifier: ^9.0.2
         version: 9.0.2
@@ -73,6 +76,9 @@ importers:
       '@repo/language':
         specifier: workspace:*
         version: link:../../packages/common/language
+      '@repo/redis-client':
+        specifier: workspace:*
+        version: link:../../packages/redis-client
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:../../packages/typescript-config
@@ -2904,6 +2910,12 @@ packages:
   execa@5.1.1:
     resolution: {integrity: sha512-8uSpZZocAZRBAPIEINJj3Lo9HyGitllczc27Eh5YYojjMFMn8yHMDMaUHE2Jqfq05D/wucwI4JGURyXt1vchyg==}
     engines: {node: '>=10'}
+
+  express-rate-limit@7.5.1:
+    resolution: {integrity: sha512-7iN8iPMDzOMHPUYllBEsQdWVB6fPDMPqwjBaFrgr4Jgr/+okjvzAy+UHlYYL/Vs0OsOrMkwS6PJDkFlJwoxUnw==}
+    engines: {node: '>= 16'}
+    peerDependencies:
+      express: '>= 4.11'
 
   express@4.21.2:
     resolution: {integrity: sha512-28HqgMZAmih1Czt9ny7qr6ek2qddF4FclbMzwhCREB6OFfH+rXAnuNCwo1/wFvrtbgsQDb4kSbX9de9lFbrXnA==}
@@ -7792,6 +7804,10 @@ snapshots:
       onetime: 5.1.2
       signal-exit: 3.0.7
       strip-final-newline: 2.0.0
+
+  express-rate-limit@7.5.1(express@4.21.2):
+    dependencies:
+      express: 4.21.2
 
   express@4.21.2:
     dependencies:

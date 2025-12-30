@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import { errorMiddleware } from './middleware/errorMiddleware';
+import { apiLimiter } from './middleware/rateLimiter';
 import authRouter from './routes/auth.route';
 import problemRouter from './routes/problem.route';
 import submissionRouter from './routes/submission.route';
@@ -9,6 +10,7 @@ import userRouter from './routes/user.route';
 import cookieParser from 'cookie-parser';
 import { initKafkaProducer, disconnectKafkaProducer } from './services/kafka.service';
 import prisma from '@repo/db/client';
+import RedisClient from '@repo/redis-client';
 
 const app = express();
 
@@ -26,6 +28,8 @@ app.get('/', (req, res) => {
 	res.send('Hello World!');
 });
 
+app.use('/api/v1', apiLimiter);
+
 app.use('/api/v1', authRouter);
 app.use('/api/v1', problemRouter);
 app.use('/api/v1', submissionRouter);
@@ -35,6 +39,11 @@ const PORT = process.env.PORT;
 
 const startServer = async () => {
 	try {
+		// Initialize Redis
+		const redis = RedisClient.getInstance();
+		await redis.ping();
+		console.log('✅ Redis connected');
+
 		// Initialize Kafka producer on startup
 		await initKafkaProducer();
 		console.log('✅ Kafka producer ready');
