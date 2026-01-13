@@ -1,1 +1,1 @@
-<img width="9556" height="3900" alt="HackStack HDL" src="https://github.com/user-attachments/assets/41053ba2-fb35-4705-a0e8-df7b31e33658" />
+<img width="4902" height="2617" alt="HackStack HDL excalidraw" src="https://github.com/user-attachments/assets/dd3ec65c-3dff-43ee-adce-235de062ab6a" />
