@@ -3,6 +3,9 @@ export type SubmissionType = {
 	status: string;
 	runtime: number;
 	memory: number;
-	languageId: string;
+	languageId: number;
+	Language?: {
+		name: string;
+	};
 	createdAt: string;
 };

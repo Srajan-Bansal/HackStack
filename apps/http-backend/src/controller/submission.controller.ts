@@ -177,6 +177,14 @@ export const getUserSubmissions = async (req: AuthenticatedRequest, res: Respons
 			select: {
 				id: true,
 				status: true,
+				runtime: true,
+				memory: true,
+				languageId: true,
+				Language: {
+					select: {
+						name: true,
+					},
+				},
 				createdAt: true,
 			},
 			orderBy: { createdAt: 'desc' },

@@ -28,19 +28,31 @@ const ProblemDesp = React.memo(({
 }) => {
 	const { isAuthenticated } = useAuth();
 	const [submissions, setSubmissions] = useState<SubmissionType[]>([]);
+	const [activeTab, setActiveTab] = useState('description');
+	const [submissionsLoading, setSubmissionsLoading] = useState(false);
 
-	useEffect(() => {
+	const fetchSubmissions = React.useCallback(() => {
 		if (problemSlug && isAuthenticated) {
-			setIsLoading(true);
+			setSubmissionsLoading(true);
 			getUserSubmissions(problemSlug)
 				.then((data) => {
-					setIsLoading(false);
+					setSubmissionsLoading(false);
 					setSubmissions(data);
 					console.log(data);
 				})
-				.catch(() => setIsLoading(false));
+				.catch(() => setSubmissionsLoading(false));
 		}
-	}, [problemSlug, setIsLoading, isAuthenticated]);
+	}, [problemSlug, isAuthenticated]);
+
+	useEffect(() => {
+		fetchSubmissions();
+	}, [fetchSubmissions]);
+
+	useEffect(() => {
+		if (activeTab === 'submissions') {
+			fetchSubmissions();
+		}
+	}, [activeTab, fetchSubmissions]);
 
 	if (isLoading) {
 		return <Spinner />;
@@ -50,6 +62,7 @@ const ProblemDesp = React.memo(({
 		<Tabs
 			defaultValue='description'
 			className='w-full'
+			onValueChange={setActiveTab}
 		>
 			<TabsList className='grid grid-cols-3 gap-px bg-gray-200 dark:bg-gray-800 p-1 ro unded-t-md'>
 				<TabsTrigger
@@ -117,7 +130,7 @@ const ProblemDesp = React.memo(({
 									</Link>
 								</div>
 							</div>
-						) : isLoading ? (
+						) : submissionsLoading ? (
 							<div className='flex justify-center py-8'>
 								<Spinner />
 							</div>

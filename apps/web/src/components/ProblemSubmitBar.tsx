@@ -190,7 +190,7 @@ const ProblemSubmitBar = React.memo(({ slug, code, setCode, selectedLanguage, se
 					setSelectedLanguage={setSelectedLanguage}
 				/>
 			</div>
-			<div className='flex-1 min-h-0 border border-gray-300 rounded-lg overflow-hidden mb-4'>
+			<div className='flex-1 min-h-[400px] border border-gray-300 rounded-lg overflow-hidden mb-4'>
 				<CodeEditor
 					key={selectedLanguage?.monaco}
 					value={code}

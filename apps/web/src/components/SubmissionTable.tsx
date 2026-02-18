@@ -39,13 +39,13 @@ const SubmissionTable = ({
 									</span>
 								</td>
 								<td className='px-6 py-4 text-sm'>
-									{submission.runtime} s
+									{submission.runtime ? `${submission.runtime.toFixed(2)} ms` : '-'}
 								</td>
 								<td className='px-6 py-4 text-sm'>
-									{(submission.memory / 1024).toFixed(2)} MB
+									{submission.memory ? `${submission.memory.toFixed(2)} MB` : '-'}
 								</td>
 								<td className='px-6 py-4 text-sm'>
-									{submission.languageId}
+									{submission.Language?.name || `Language ${submission.languageId}`}
 								</td>
 								<td className='px-6 py-4 text-sm'>
 									{new Date(

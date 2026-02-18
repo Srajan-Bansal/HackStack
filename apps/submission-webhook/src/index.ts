@@ -8,6 +8,8 @@ interface ExecutorResponse {
 	submissionId: string;
 	userId: string;
 	problemId: number;
+	runtime?: number[];
+	memory?: number[];
 }
 
 class ExecutorConsumer {
@@ -98,48 +100,72 @@ class ExecutorConsumer {
 			const results = Array.isArray(result.data) ? result.data : [result.data];
 			const executedCount = results.length;
 
-			const passedTestCaseIds: string[] = [];
-			const failedTestCaseIds: string[] = [];
+			const ids: string[] = [];
+			const statuses: string[] = [];
+			const runtimes: (number | null)[] = [];
+			const memories: (number | null)[] = [];
 
 			for (let i = 0; i < executedCount && i < testCases.length; i++) {
 				const testResult = results[i];
 				const isPassed = testResult?.includes('passed');
+				const runtime = result.runtime?.[i] ?? null;
+				const memory = result.memory?.[i] ?? null;
 
-				if (isPassed) {
-					passedTestCaseIds.push(testCases[i]!.id);
-				} else {
-					let errorStatus: TestCaseStatus = TestCaseStatus.WRONG_ANSWER;
+				let status: TestCaseStatus = TestCaseStatus.ACCEPTED;
+				if (!isPassed) {
 					if (testResult?.toLowerCase().includes('runtime error')) {
-						errorStatus = TestCaseStatus.RUNTIME_ERROR;
+						status = TestCaseStatus.RUNTIME_ERROR;
 					} else if (testResult?.toLowerCase().includes('time limit')) {
-						errorStatus = TestCaseStatus.TIME_LIMIT_EXCEEDED;
+						status = TestCaseStatus.TIME_LIMIT_EXCEEDED;
 					} else if (testResult?.toLowerCase().includes('memory')) {
-						errorStatus = TestCaseStatus.MEMORY_LIMIT_EXCEEDED;
+						status = TestCaseStatus.MEMORY_LIMIT_EXCEEDED;
+					} else {
+						status = TestCaseStatus.WRONG_ANSWER;
 					}
-
-					failedTestCaseIds.push(testCases[i]!.id);
-
-					await tx.testCase.update({
-						where: { id: testCases[i]!.id },
-						data: { status: errorStatus },
-					});
 				}
+
+				ids.push(testCases[i]!.id);
+				statuses.push(status);
+				runtimes.push(runtime);
+				memories.push(memory);
 			}
 
-			if (passedTestCaseIds.length > 0) {
-				await tx.testCase.updateMany({
-					where: { id: { in: passedTestCaseIds } },
-					data: { status: TestCaseStatus.ACCEPTED },
-				});
+			const CHUNK_SIZE = 50;
+			for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+				const chunkIds = ids.slice(i, i + CHUNK_SIZE);
+				const chunkStatuses = statuses.slice(i, i + CHUNK_SIZE);
+				const chunkRuntimes = runtimes.slice(i, i + CHUNK_SIZE);
+				const chunkMemories = memories.slice(i, i + CHUNK_SIZE);
+
+				const updates = chunkIds.map((id, idx) => ({
+					where: { id },
+					data: {
+						status: chunkStatuses[idx] as TestCaseStatus,
+						runtime: chunkRuntimes[idx],
+						memory: chunkMemories[idx],
+					},
+				}));
+
+				await Promise.all(updates.map(u => tx.testCase.update(u)));
 			}
 
 			const allExecutedPassed = results.every(r => r && r.includes('passed'));
 			const allTestCasesExecuted = executedCount === testCases.length;
 			const submissionStatus = (allExecutedPassed && allTestCasesExecuted) ? SubmissionStatus.SUCCESS : SubmissionStatus.REJECTED;
 
+			const validRuntimes = runtimes.filter((r): r is number => r !== null);
+			const validMemories = memories.filter((m): m is number => m !== null);
+
+			const avgRuntime = validRuntimes.length > 0 ? validRuntimes.reduce((a, b) => a + b, 0) / validRuntimes.length : null;
+			const avgMemory = validMemories.length > 0 ? validMemories.reduce((a, b) => a + b, 0) / validMemories.length : null;
+
 			await tx.submission.update({
 				where: { id: result.submissionId },
-				data: { status: submissionStatus },
+				data: {
+					status: submissionStatus,
+					runtime: avgRuntime,
+					memory: avgMemory,
+				},
 			});
 
 			await this.updateUserProblemStatus(
@@ -148,6 +174,9 @@ class ExecutorConsumer {
 				result.problemId,
 				submissionStatus
 			);
+		}, {
+			maxWait: 15000,
+			timeout: 30000,
 		});
 
 		console.log(`✅ Updated submission ${result.submissionId} successfully`);
