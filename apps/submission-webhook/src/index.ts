@@ -1,5 +1,5 @@
 import { consumer } from './kafka.config';
-import prisma, { SubmissionStatus, ProblemStatus, TestCaseStatus } from '@repo/db/client';
+import prisma, { SubmissionStatus, ProblemStatus, TestCaseStatus, TransactionClient } from '@repo/db/client';
 
 interface ExecutorResponse {
 	status: 'SUCCESS' | 'ERROR';
@@ -68,7 +68,7 @@ class ExecutorConsumer {
 			testCaseStatus = TestCaseStatus.MEMORY_LIMIT_EXCEEDED;
 		}
 
-		await prisma.$transaction(async (tx) => {
+		await prisma.$transaction(async (tx: TransactionClient) => {
 			await tx.testCase.updateMany({
 				where: { submissionId: result.submissionId },
 				data: { status: testCaseStatus },
@@ -91,7 +91,7 @@ class ExecutorConsumer {
 	}
 
 	private async handleSuccess(result: ExecutorResponse) {
-		await prisma.$transaction(async (tx) => {
+		await prisma.$transaction(async (tx: TransactionClient) => {
 			const testCases = await tx.testCase.findMany({
 				where: { submissionId: result.submissionId },
 				orderBy: { index: 'asc' },
@@ -182,7 +182,7 @@ class ExecutorConsumer {
 		console.log(`✅ Updated submission ${result.submissionId} successfully`);
 	}
 
-	private async updateUserProblemStatus(tx: any, userId: string, problemId: number, submissionStatus: SubmissionStatus) {
+	private async updateUserProblemStatus(tx: TransactionClient, userId: string, problemId: number, submissionStatus: SubmissionStatus) {
 		const existing = await tx.userProblem.findUnique({
 			where: {
 				userId_problemId: {

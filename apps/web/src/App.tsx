@@ -1,11 +1,5 @@
 import { Theme } from '@radix-ui/themes';
-import {
-	BrowserRouter,
-	Routes,
-	Route,
-	Navigate,
-	Outlet,
-} from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import Home from './pages/Home';
 import Index from './pages/Index';
 import Problem from './pages/Problem';
