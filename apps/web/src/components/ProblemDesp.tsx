@@ -18,12 +18,11 @@ import { Link } from 'react-router-dom';
 const ProblemDesp = React.memo(({
 	problem,
 	isLoading,
-	setIsLoading,
 	problemSlug,
 }: {
 	problem: string;
 	isLoading: boolean;
-	setIsLoading: (isLoading: boolean) => void;
+	setIsLoading?: (isLoading: boolean) => void;
 	problemSlug: string;
 }) => {
 	const { isAuthenticated } = useAuth();
