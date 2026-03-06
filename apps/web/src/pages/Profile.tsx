@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Spinner from '@repo/ui/components/Spinner';
 import axios from 'axios';
-import { Trophy, CheckCircle, XCircle } from 'lucide-react';
+import { Trophy, CheckCircle, XCircle, Target } from 'lucide-react';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
@@ -51,131 +51,106 @@ const Profile = () => {
 		);
 	}
 
+	const acceptanceRate = stats?.totalSubmissions
+		? ((stats.acceptedSubmissions / stats.totalSubmissions) * 100).toFixed(1)
+		: '0';
+
 	return (
 		<div className='min-h-screen bg-background'>
 			<Header />
 			<main className='container mx-auto px-4 py-8'>
 				<div className='max-w-4xl mx-auto'>
-					<h1 className='text-3xl font-bold mb-8 dark:text-white'>
-						Profile Statistics
-					</h1>
-
-					{/* User Info */}
-					<div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8'>
-						<h2 className='text-xl font-semibold mb-4 dark:text-white'>
-							User Information
-						</h2>
-						<p className='text-gray-600 dark:text-gray-300'>
-							<span className='font-medium'>Name:</span> {user?.name || 'Anonymous'}
-						</p>
-						<p className='text-gray-600 dark:text-gray-300'>
-							<span className='font-medium'>Email:</span> {user?.email}
-						</p>
+					{/* Profile Header */}
+					<div className='rounded-xl border border-border/50 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10 p-8 mb-8'>
+						<div className='flex items-center gap-5'>
+							<div className='w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-emerald-500/20'>
+								{(user?.name || user?.email || '?')[0].toUpperCase()}
+							</div>
+							<div>
+								<h1 className='text-2xl font-bold'>
+									{user?.name || 'Anonymous'}
+								</h1>
+								<p className='text-muted-foreground text-sm'>{user?.email}</p>
+							</div>
+						</div>
 					</div>
 
 					{/* Stats Grid */}
-					<div className='grid md:grid-cols-3 gap-6 mb-8'>
-						<div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-gray-500 dark:text-gray-400 text-sm'>
-										Total Submissions
-									</p>
-									<p className='text-3xl font-bold dark:text-white'>
-										{stats?.totalSubmissions || 0}
-									</p>
-								</div>
-								<Trophy className='w-12 h-12 text-blue-500' />
+					<div className='grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8'>
+						<div className='rounded-xl border border-border/50 bg-card/50 p-5'>
+							<div className='flex items-center justify-between mb-3'>
+								<span className='text-xs text-muted-foreground font-medium uppercase tracking-wider'>Total Submissions</span>
+								<Target className='w-4 h-4 text-blue-500' />
 							</div>
+							<div className='text-2xl font-bold'>{stats?.totalSubmissions || 0}</div>
 						</div>
-
-						<div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-gray-500 dark:text-gray-400 text-sm'>
-										Accepted
-									</p>
-									<p className='text-3xl font-bold text-green-600'>
-										{stats?.acceptedSubmissions || 0}
-									</p>
-								</div>
-								<CheckCircle className='w-12 h-12 text-green-500' />
+						<div className='rounded-xl border border-border/50 bg-card/50 p-5'>
+							<div className='flex items-center justify-between mb-3'>
+								<span className='text-xs text-muted-foreground font-medium uppercase tracking-wider'>Accepted</span>
+								<CheckCircle className='w-4 h-4 text-emerald-500' />
 							</div>
+							<div className='text-2xl font-bold text-emerald-500'>{stats?.acceptedSubmissions || 0}</div>
 						</div>
-
-						<div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
-							<div className='flex items-center justify-between'>
-								<div>
-									<p className='text-gray-500 dark:text-gray-400 text-sm'>
-										Rejected
-									</p>
-									<p className='text-3xl font-bold text-red-600'>
-										{(stats?.totalSubmissions || 0) -
-											(stats?.acceptedSubmissions || 0)}
-									</p>
-								</div>
-								<XCircle className='w-12 h-12 text-red-500' />
+						<div className='rounded-xl border border-border/50 bg-card/50 p-5'>
+							<div className='flex items-center justify-between mb-3'>
+								<span className='text-xs text-muted-foreground font-medium uppercase tracking-wider'>Rejected</span>
+								<XCircle className='w-4 h-4 text-red-500' />
 							</div>
+							<div className='text-2xl font-bold text-red-500'>{(stats?.totalSubmissions || 0) - (stats?.acceptedSubmissions || 0)}</div>
+						</div>
+						<div className='rounded-xl border border-border/50 bg-card/50 p-5'>
+							<div className='flex items-center justify-between mb-3'>
+								<span className='text-xs text-muted-foreground font-medium uppercase tracking-wider'>Acceptance Rate</span>
+								<Trophy className='w-4 h-4 text-yellow-500' />
+							</div>
+							<div className='text-2xl font-bold'>{acceptanceRate}%</div>
 						</div>
 					</div>
 
-					{/* Problems Solved */}
-					<div className='bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6'>
-						<h2 className='text-xl font-semibold mb-6 dark:text-white'>
-							Problems Solved: {stats?.solvedProblems || 0}
+					{/* Problems Solved Breakdown */}
+					<div className='rounded-xl border border-border/50 bg-card/50 p-6'>
+						<h2 className='text-lg font-semibold mb-6'>
+							Problems Solved
+							<span className='ml-2 text-emerald-500'>
+								{stats?.solvedProblems || 0}
+							</span>
 						</h2>
 
-						<div className='space-y-4'>
+						<div className='space-y-5'>
 							<div>
 								<div className='flex justify-between mb-2'>
-									<span className='text-sm font-medium text-green-600'>Easy</span>
-									<span className='text-sm font-medium dark:text-white'>
-										{stats?.byDifficulty.easy || 0}
-									</span>
+									<span className='text-sm font-medium text-emerald-500'>Easy</span>
+									<span className='text-sm font-medium'>{stats?.byDifficulty.easy || 0}</span>
 								</div>
-								<div className='w-full bg-gray-200 rounded-full h-2.5'>
+								<div className='w-full h-2 bg-muted rounded-full overflow-hidden'>
 									<div
-										className='bg-green-600 h-2.5 rounded-full'
-										style={{
-											width: `${((stats?.byDifficulty.easy || 0) / (stats?.solvedProblems || 1)) * 100}%`,
-										}}
-									></div>
+										className='h-full bg-emerald-500 rounded-full transition-all duration-500'
+										style={{ width: `${((stats?.byDifficulty.easy || 0) / Math.max(stats?.solvedProblems || 1, 1)) * 100}%` }}
+									/>
 								</div>
 							</div>
-
 							<div>
 								<div className='flex justify-between mb-2'>
-									<span className='text-sm font-medium text-yellow-600'>
-										Medium
-									</span>
-									<span className='text-sm font-medium dark:text-white'>
-										{stats?.byDifficulty.medium || 0}
-									</span>
+									<span className='text-sm font-medium text-yellow-500'>Medium</span>
+									<span className='text-sm font-medium'>{stats?.byDifficulty.medium || 0}</span>
 								</div>
-								<div className='w-full bg-gray-200 rounded-full h-2.5'>
+								<div className='w-full h-2 bg-muted rounded-full overflow-hidden'>
 									<div
-										className='bg-yellow-600 h-2.5 rounded-full'
-										style={{
-											width: `${((stats?.byDifficulty.medium || 0) / (stats?.solvedProblems || 1)) * 100}%`,
-										}}
-									></div>
+										className='h-full bg-yellow-500 rounded-full transition-all duration-500'
+										style={{ width: `${((stats?.byDifficulty.medium || 0) / Math.max(stats?.solvedProblems || 1, 1)) * 100}%` }}
+									/>
 								</div>
 							</div>
-
 							<div>
 								<div className='flex justify-between mb-2'>
-									<span className='text-sm font-medium text-red-600'>Hard</span>
-									<span className='text-sm font-medium dark:text-white'>
-										{stats?.byDifficulty.hard || 0}
-									</span>
+									<span className='text-sm font-medium text-red-500'>Hard</span>
+									<span className='text-sm font-medium'>{stats?.byDifficulty.hard || 0}</span>
 								</div>
-								<div className='w-full bg-gray-200 rounded-full h-2.5'>
+								<div className='w-full h-2 bg-muted rounded-full overflow-hidden'>
 									<div
-										className='bg-red-600 h-2.5 rounded-full'
-										style={{
-											width: `${((stats?.byDifficulty.hard || 0) / (stats?.solvedProblems || 1)) * 100}%`,
-										}}
-									></div>
+										className='h-full bg-red-500 rounded-full transition-all duration-500'
+										style={{ width: `${((stats?.byDifficulty.hard || 0) / Math.max(stats?.solvedProblems || 1, 1)) * 100}%` }}
+									/>
 								</div>
 							</div>
 						</div>

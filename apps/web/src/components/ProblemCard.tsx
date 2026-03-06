@@ -10,6 +10,7 @@ type ProblemCardProps = Pick<
 	'id' | 'title' | 'difficulty' | 'slug'
 > & {
 	acceptanceRate?: number;
+	isEven?: boolean;
 };
 
 const ProblemCard = ({
@@ -18,32 +19,33 @@ const ProblemCard = ({
 	difficulty,
 	slug,
 	acceptanceRate = 0,
+	isEven = false,
 }: ProblemCardProps) => {
 	return (
 		<Link
 			to={`/problem/${slug}`}
-			className='flex items-center justify-between rounded-lg border border-border p-4 transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
+			className={`grid grid-cols-[60px_1fr_100px_110px] gap-4 items-center px-6 py-3.5 transition-colors hover:bg-emerald-500/5 focus:outline-none focus:bg-emerald-500/5 ${
+				isEven ? 'bg-transparent' : 'bg-muted/20'
+			}`}
 			aria-label={`Solve problem ${id}: ${title} - ${difficulty} difficulty`}
 		>
-			<div className='flex items-center gap-4'>
-				<span className='text-sm text-muted-foreground' aria-label={`Problem number ${id}`}>
-					{id}.
-				</span>
-				<span className='font-medium'>{title}</span>
-			</div>
-			<div className='flex items-center gap-4'>
-				<DifficultyBadge
-					difficulty={
-						difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'
-					}
-				/>
-				<span 
-					className='text-sm text-muted-foreground'
-					aria-label={`Acceptance rate: ${acceptanceRate.toFixed(1)} percent`}
-				>
-					{acceptanceRate.toFixed(1)}%
-				</span>
-			</div>
+			<span className='text-sm text-muted-foreground font-mono'>
+				{id}
+			</span>
+			<span className='font-medium text-sm hover:text-emerald-500 transition-colors'>
+				{title}
+			</span>
+			<DifficultyBadge
+				difficulty={
+					difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'
+				}
+			/>
+			<span
+				className='text-sm text-muted-foreground text-right'
+				aria-label={`Acceptance rate: ${acceptanceRate.toFixed(1)} percent`}
+			>
+				{acceptanceRate.toFixed(1)}%
+			</span>
 		</Link>
 	);
 };
