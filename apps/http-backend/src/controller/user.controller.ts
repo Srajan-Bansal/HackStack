@@ -110,11 +110,25 @@ export const getUserSubmissionStats = async (req: AuthenticatedRequest, res: Res
 			difficultyMap[difficulty as keyof typeof difficultyMap] = item._count;
 		});
 
+		const totalProblemsByDifficulty = await prisma.problem.groupBy({
+			by: ['difficulty'],
+			where: { hidden: false },
+			_count: true,
+		});
+
+		const totalMap = { easy: 0, medium: 0, hard: 0 };
+		totalProblemsByDifficulty.forEach((item: any) => {
+			const difficulty = item.difficulty.toLowerCase();
+			totalMap[difficulty as keyof typeof totalMap] = item._count;
+		});
+
 		const stats = {
 			totalSubmissions,
 			acceptedSubmissions,
 			solvedProblems: difficultyMap.easy + difficultyMap.medium + difficultyMap.hard,
+			totalProblems: totalMap.easy + totalMap.medium + totalMap.hard,
 			byDifficulty: difficultyMap,
+			totalByDifficulty: totalMap,
 		};
 
 		res.status(200).json(stats);

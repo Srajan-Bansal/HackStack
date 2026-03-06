@@ -33,7 +33,7 @@ app.use('/api/v1', apiLimiter);
 app.use('/api/v1', authRouter);
 app.use('/api/v1', problemRouter);
 app.use('/api/v1', submissionRouter);
-app.use('/api/v1', userRouter);
+app.use('/api/v1/user', userRouter);
 
 const PORT = process.env.PORT;
 

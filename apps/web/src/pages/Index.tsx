@@ -137,6 +137,7 @@ const Index = () => {
 									title={problem.title}
 									slug={problem.slug}
 									difficulty={problem.difficulty}
+									acceptanceRate={(problem as any).acceptanceRate}
 									isEven={index % 2 === 0}
 								/>
 							))}

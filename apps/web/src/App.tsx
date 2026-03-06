@@ -24,6 +24,16 @@ const RedirectIfAuthenticated = () => {
 	return <Outlet />;
 };
 
+const RequireAuth = () => {
+	const { isAuthenticated } = useAuth();
+
+	if (!isAuthenticated) {
+		return <Navigate to='/login' replace />;
+	}
+
+	return <Outlet />;
+};
+
 const AppRoutes = () => {
 	const { loading } = useAuth();
 
@@ -55,10 +65,12 @@ const AppRoutes = () => {
 				path='/problem/:slug'
 				element={<Problem />}
 			/>
-			<Route
-				path='/profile'
-				element={<Profile />}
-			/>
+			<Route element={<RequireAuth />}>
+				<Route
+					path='/profile'
+					element={<Profile />}
+				/>
+			</Route>
 		</Routes>
 	);
 };

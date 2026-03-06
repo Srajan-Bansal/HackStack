@@ -84,7 +84,7 @@ export const userLogout = async () => {
 
 export const getUserSubmissions = async (problemSlug: string) => {
 	const response = await axios.get(
-		`${BACKEND_URL}/api/v1/problem/${problemSlug}/submissions`,
+		`${BACKEND_URL}/api/v1/user/problem/${problemSlug}/submissions`,
 		{
 			withCredentials: true,
 		}

@@ -19,6 +19,7 @@ interface Problems {
 	difficulty: string;
 	slug: string;
 	status?: ProblemStatus;
+	acceptanceRate?: number;
 }
 
 export const getProblems = async (req: ProblemsRequest, res: Response) => {
@@ -26,41 +27,60 @@ export const getProblems = async (req: ProblemsRequest, res: Response) => {
 	const take = parseInt(req.query.take as string) || 50;
 
 	let problems: Problems[] = [];
-	if (!req.userId) {
-		problems = await prisma.problem.findMany({
-			skip: skip,
-			take: take,
-			where: { hidden: false },
+	const baseSelect = {
+		id: true,
+		title: true,
+		difficulty: true,
+		slug: true,
+		_count: {
 			select: {
-				id: true,
-				title: true,
-				difficulty: true,
-				slug: true,
+				Submission: true,
 			},
+		},
+		Submission: {
+			where: { status: 'SUCCESS' as any },
+			select: { id: true },
+		},
+	};
+
+	if (!req.userId) {
+		const rawProblems = await prisma.problem.findMany({
+			skip,
+			take,
+			where: { hidden: false },
+			select: baseSelect,
 		});
-	} else if (req.userId) {
-		const problemsWithStatus = await prisma.problem.findMany({
-			skip: skip,
-			take: take,
+		problems = rawProblems.map((p: any) => ({
+			id: p.id,
+			title: p.title,
+			difficulty: p.difficulty,
+			slug: p.slug,
+			acceptanceRate: p._count.Submission > 0
+				? (p.Submission.length / p._count.Submission) * 100
+				: 0,
+		}));
+	} else {
+		const rawProblems = await prisma.problem.findMany({
+			skip,
+			take,
 			where: { hidden: false },
 			select: {
-				id: true,
-				title: true,
-				difficulty: true,
-				slug: true,
+				...baseSelect,
 				UserProblem: {
 					where: { userId: req.userId },
 					select: { status: true },
 				},
 			},
 		});
-
-		problems = problemsWithStatus.map((problem: any) => ({
-			id: problem.id,
-			title: problem.title,
-			difficulty: problem.difficulty,
-			slug: problem.slug,
-			status: problem.UserProblem[0]?.status || ProblemStatus.NOT_ATTEMPTED,
+		problems = rawProblems.map((p: any) => ({
+			id: p.id,
+			title: p.title,
+			difficulty: p.difficulty,
+			slug: p.slug,
+			status: p.UserProblem[0]?.status || ProblemStatus.NOT_ATTEMPTED,
+			acceptanceRate: p._count.Submission > 0
+				? (p.Submission.length / p._count.Submission) * 100
+				: 0,
 		}));
 	}
 
