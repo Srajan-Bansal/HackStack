@@ -1,0 +1,9 @@
+[submodule "HackStack-server"]
+	path = HackStack-server
+	url = https://github.com/Srajan-Bansal/HackStack.git
+[submodule "hackstack-problems"]
+	path = hackstack-problems
+	url = https://github.com/Srajan-Bansal/hackstack-problems.git
+[submodule "executor"]
+	path = executor
+	url = https://github.com/Srajan-Bansal/OpenExecutor.git

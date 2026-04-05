@@ -1,0 +1,5 @@
+.claude/
+.playwright-mcp/
+.env
+.env.*
+!.env.docker.example
