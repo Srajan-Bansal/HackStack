@@ -1,6 +1,6 @@
 [submodule "HackStack-server"]
 	path = HackStack-server
-	url = https://github.com/Srajan-Bansal/HackStack.git
+	url = https://github.com/Srajan-Bansal/HackStack-monorepo.git
 [submodule "hackstack-problems"]
 	path = hackstack-problems
 	url = https://github.com/Srajan-Bansal/hackstack-problems.git

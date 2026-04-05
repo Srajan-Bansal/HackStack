@@ -1,51 +1,59 @@
-Yes, you can use that simpler approach! For Kafka 3.7.1, KRaft mode is the default, so it's much simpler:
+# HackStack
 
-  Simple Kafka Setup
+A competitive programming platform for coding challenges, contests, and skill building.
 
-  # Run Redis (Alpine - smallest image ~40MB)
-  docker run -d --name hackstack-redis -p 6379:6379 redis:7.2-alpine
+## Architecture
 
-  # Run Kafka (smallest available ~400MB)
-  docker run -d --name hackstack-kafka -p 9092:9092 apache/kafka:3.7.1
+<img width="4902" height="2617" alt="HackStack Architecture" src="https://github.com/user-attachments/assets/dd3ec65c-3dff-43ee-adce-235de062ab6a" />
 
-  Working with Kafka
+## Repository Structure
 
-  # Get into the Kafka container
-  docker exec -it hackstack-kafka /bin/bash
+This is the parent repository that ties together all HackStack services as git submodules:
 
-  # Navigate to Kafka bin directory
-  cd /opt/kafka/bin
+| Repository | Description |
+|-----------|-------------|
+| [HackStack-monorepo](https://github.com/Srajan-Bansal/HackStack-monorepo) | Turborepo monorepo — React frontend, Express backend, submission webhook |
+| [hackstack-problems](https://github.com/Srajan-Bansal/hackstack-problems) | Problem definitions, test cases, and boilerplate code |
+| [OpenExecutor](https://github.com/Srajan-Bansal/OpenExecutor) | Spring Boot code execution engine |
 
-  # Create the actual topics used by HackStack
-  ./kafka-topics.sh --create --topic code-executor --bootstrap-server localhost:9092
-  ./kafka-topics.sh --create --topic code-results --bootstrap-server localhost:9092
+## Tech Stack
 
-  # List topics
-  ./kafka-topics.sh --list --bootstrap-server localhost:9092
+- **Frontend:** React + TypeScript + Vite + TailwindCSS + Monaco Editor
+- **Backend:** Express + TypeScript + Prisma (PostgreSQL)
+- **Execution Engine:** Spring Boot + Java
+- **Message Queue:** Apache Kafka
+- **Caching:** Redis
+- **Monorepo:** Turborepo + pnpm workspaces
 
-  # Monitor code-executor topic (execution requests)
-  ./kafka-console-consumer.sh --topic code-executor --from-beginning --bootstrap-server localhost:9092
+## Getting Started
 
-  # Monitor code-results topic (execution results) - in another terminal
-  docker exec -it hackstack-kafka /bin/bash
-  cd /opt/kafka/bin
-  ./kafka-console-consumer.sh --topic code-results --from-beginning --bootstrap-server localhost:9092
+```bash
+# Clone with submodules
+git clone --recurse-submodules https://github.com/Srajan-Bansal/HackStack.git
 
-  Your .env configuration
+# If already cloned without submodules
+git submodule update --init --recursive
+```
 
-  REDIS_URL=redis://localhost:6379
-  KAFKA_BROKER=localhost:9092
+### Infrastructure
 
-  This simpler approach works perfectly for development! The Kafka 3.7.1 image comes pre-configured with KRaft mode, so no Zookeeper neede
+```bash
+# Redis
+docker run -d --name hackstack-redis -p 6379:6379 redis:alpine
 
-# Kafka Monitorning UI
-  docker run -d \
-  -p 8080:8080 \
-  -e AKHQ_CONFIGURATION='
-akhq:
-  connections:
-    local:
-      properties:
-        bootstrap.servers: "localhost:9092"
-' \
-  tchiotludo/akhq
+# Kafka (KRaft mode)
+docker run -d --name hackstack-kafka -p 9092:9092 apache/kafka:3.7.1
+```
+
+### Development
+
+```bash
+# Install dependencies
+cd HackStack-monorepo
+pnpm install
+
+# Start all services
+pnpm dev
+```
+
+See individual repository READMEs for detailed setup instructions.

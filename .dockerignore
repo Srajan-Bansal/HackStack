@@ -1,0 +1,23 @@
+# Dependencies & build artifacts
+**/node_modules
+**/dist
+**/target
+**/.turbo
+
+# Git
+**/.git
+**/.gitignore
+
+# Environment files (secrets)
+**/.env*
+!.env.docker.example
+
+# IDE & tooling
+**/.idea
+**/.vscode
+**/.claude
+**/.playwright-mcp
+
+# Misc
+**/coverage
+**/*.log
