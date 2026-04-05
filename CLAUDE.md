@@ -15,7 +15,8 @@ HackStack is a competitive programming platform consisting of three main compone
 - Code Execution: Spring Boot executor (in development)
 - Caching: Redis
 - Event Streaming: Kafka
-- Monorepo: Turborepo + pnpm workspaces
+- Runtime & Package Manager: Bun (replaces Node.js + pnpm)
+- Monorepo: Turborepo + Bun workspaces
 
 ## Repository Structure
 
@@ -34,38 +35,38 @@ All commands should be run from `HackStack-server/` directory:
 
 ```bash
 # Start all apps in development mode
-pnpm dev
+bun dev
 
 # Start only frontend and backend (exclude webhook)
-pnpm web
+bun web
 
 # Start only backend
-pnpm backend
+bun backend
 
 # Build all apps and packages
-pnpm build
+bun run build
 
 # Lint all apps
-pnpm lint
+bun run lint
 
 # Type check all apps
-pnpm type-check
+bun run type-check
 
 # Format code
-pnpm format
+bun run format
 ```
 
 ### Database Management
 
 ```bash
 # Generate Prisma client (run from HackStack-server/)
-pnpm prisma:generate
+bun run prisma:generate
 
 # Run database migrations
-pnpm prisma:migrate
+bun run prisma:migrate
 
 # Seed language data
-pnpm prisma:seedLanguage
+bun run prisma:seedLanguage
 ```
 
 ### Boilerplate Generator
@@ -75,10 +76,10 @@ pnpm prisma:seedLanguage
 cd HackStack-server/apps/boilerplate-generator
 
 # Generate boilerplate for a single problem
-pnpm generate
+bun run generate
 
 # Generate boilerplate for all problems
-pnpm generate-all
+bun run generate-all
 ```
 
 ### Executor (Spring Boot)
@@ -279,15 +280,15 @@ Each app requires its own `.env` file:
 
 ```bash
 # Seed language data
-pnpm prisma:seedLanguage
+bun run prisma:seedLanguage
 
 # Seed problem data
-pnpm prisma:seedProblem
+bun run prisma:seedProblem
 ```
 
 ## Important Notes
 
-- **Package Management**: Always use `pnpm` for HackStack-server (specified in package.json packageManager)
+- **Runtime & Package Manager**: Always use `bun` for HackStack-server (replaces Node.js + pnpm). Bun auto-loads `.env` files — no `dotenv` needed
 - **Monorepo**: Uses Turborepo for task orchestration and caching with TUI (terminal UI) mode
 - **Shared Packages**: Located in `packages/common/` for language and zod schemas, root `packages/` for others
 - **Database**: PostgreSQL required, configure via `DATABASE_URL` in multiple .env files

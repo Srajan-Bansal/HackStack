@@ -23,7 +23,8 @@ This is the parent repository that ties together all HackStack services as git s
 - **Execution Engine:** Spring Boot + Java
 - **Message Queue:** Apache Kafka
 - **Caching:** Redis
-- **Monorepo:** Turborepo + pnpm workspaces
+- **Runtime & Package Manager:** Bun
+- **Monorepo:** Turborepo + Bun workspaces
 
 ## Getting Started
 
@@ -45,15 +46,30 @@ docker run -d --name hackstack-redis -p 6379:6379 redis:alpine
 docker run -d --name hackstack-kafka -p 9092:9092 apache/kafka:3.7.1
 ```
 
+### Kafka Topics
+
+```bash
+# Access Kafka container
+docker exec -it hackstack-kafka /bin/bash
+cd /opt/kafka/bin
+
+# Create required topics
+./kafka-topics.sh --create --topic code-executor --bootstrap-server localhost:9092
+./kafka-topics.sh --create --topic code-results --bootstrap-server localhost:9092
+
+# List topics
+./kafka-topics.sh --list --bootstrap-server localhost:9092
+```
+
 ### Development
 
 ```bash
 # Install dependencies
 cd HackStack-monorepo
-pnpm install
+bun install
 
 # Start all services
-pnpm dev
+bun dev
 ```
 
 See individual repository READMEs for detailed setup instructions.
