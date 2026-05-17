@@ -1,0 +1,62 @@
+# Production Docker Compose for AWS EC2 deployment.
+# Infrastructure (Postgres, Redis, Kafka) runs on managed AWS services / separate EC2.
+# This file runs only the 3 application services.
+#
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Requires .env file with: JWT_SECRET, FRONTEND_URL, DATABASE_URL,
+#   REDIS_URL, KAFKA_BROKER, REDIS_HOST
+
+services:
+  http-backend:
+    image: srajanbansal/hackstack-http-backend:latest
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKA_CLIENT_ID: hackstack-backend
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_COOKIE_EXPIRES_IN: 604800000
+      JWT_EXPIRES_IN: 7d
+      JWT_SALT_ROUNDS: 10
+      FRONTEND_URL: ${FRONTEND_URL}
+      COOKIE_SECURE: "true"
+      KAFKAJS_NO_PARTITIONER_WARNING: 1
+    volumes:
+      - ./hackstack-problems:/hackstack-problems:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  submission-webhook:
+    image: srajanbansal/hackstack-submission-webhook:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL}
+      KAFKA_BROKER: ${KAFKA_BROKER}
+      KAFKAJS_NO_PARTITIONER_WARNING: 1
+
+  executor:
+    image: srajanbansal/hackstack-executor:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BROKER}
+      SPRING_DATA_REDIS_HOST: ${REDIS_HOST}
+      SPRING_DATA_REDIS_PORT: 6379
+    volumes:
+      - ./hackstack-problems:/hackstack-problems:ro

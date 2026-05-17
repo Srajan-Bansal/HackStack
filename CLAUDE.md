@@ -206,9 +206,29 @@ This component provides scalable code execution capabilities via Kafka message p
 
 ## Infrastructure Setup
 
-### Docker Services
+### Docker Compose (Recommended)
 
-The platform requires Redis and Kafka services. Use these Docker commands:
+The root `docker-compose.yml` orchestrates the full stack (Postgres, Redis, Kafka, all app services):
+
+```bash
+# Start all infrastructure and services
+docker compose up -d
+
+# Start only infrastructure (for local dev)
+docker compose up -d postgres redis kafka
+
+# View logs
+docker compose logs -f http-backend
+```
+
+Default credentials (override via `.env` at repo root):
+- Postgres: `hackstack` / `changeme` (db: `hackstack`)
+- Redis password: `changeme`
+- Kafka auto-creates topics when `KAFKA_AUTO_CREATE_TOPICS_ENABLE=true`
+
+### Individual Docker Services (Alternative)
+
+For running services individually without compose:
 
 ```bash
 # Redis (Alpine - smallest image)
@@ -227,6 +247,8 @@ docker run -d --name hackstack-kafka -p 9092:9092 apache/kafka
 HackStack uses two Kafka topics:
 - **code-executor**: Sends code execution requests from http-backend to executor
 - **code-results**: Receives execution results in submission-webhook
+
+Topics are auto-created in Docker Compose mode. For manual creation:
 
 ```bash
 # Access Kafka container
@@ -296,4 +318,6 @@ bun run prisma:seedProblem
 - **Webhook Service**: Receives execution callbacks from executor service via Kafka to update submission statuses
 - **Boilerplate Generator**: Expects problem definitions in `../hackstack-problems` directory relative to HackStack-server
 - **TypeScript**: Full TypeScript support across frontend and backend with shared type definitions
-- **Executor**: Java required, uses Maven wrapper (mvnw), currently in development phase
+- **Executor**: Java required, uses Maven wrapper (mvnw), runs in privileged Docker container for code isolation
+- **Submodules**: `HackStack-server`, `hackstack-problems`, and `executor` are git submodules — use `git submodule update --init --recursive` after clone
+- **Turbo Filtering**: Use `--filter=<package>` to run tasks for a specific app (e.g., `turbo run dev --filter=http-backend`)
